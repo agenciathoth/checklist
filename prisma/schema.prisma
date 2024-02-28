@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model Users {
@@ -29,7 +29,6 @@ model Customers {
     galleryLink String?
     presentationText String?
     archivedAt DateTime?
-    userId String
     createdAt DateTime @default(now()) 
     updatedAt DateTime @default(now())
 }
