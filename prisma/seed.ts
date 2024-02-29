@@ -11,8 +11,10 @@ async function main() {
     plainPassword.concat(env.PASSWORD_SECRET ?? "")
   ).toString();
 
-  await prisma.users.create({
-    data: {
+  await prisma.users.upsert({
+    where: { password: encryptedPassword },
+    update: {},
+    create: {
       name: "Neto",
       password: encryptedPassword,
       role: "ADMIN",
