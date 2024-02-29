@@ -1,7 +1,8 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import sha256 from "crypto-js/sha256";
 
 import { prismaClient } from "@/lib/prisma";
-import CredentialsProvider from "next-auth/providers/credentials";
 
 export const nextAuthOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -16,8 +17,12 @@ export const nextAuthOptions: NextAuthOptions = {
           return null;
         }
 
-        const user = await prismaClient.users.findFirst({
-          where: { secret: credentials?.secret },
+        const hashedSecret = sha256(
+          credentials.secret.concat(process.env.PASSWORD_SECRET ?? "")
+        ).toString();
+
+        const user = await prismaClient.users.findUnique({
+          where: { password: hashedSecret },
           select: {
             id: true,
             name: true,
