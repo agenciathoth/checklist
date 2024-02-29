@@ -1,10 +1,9 @@
 import { getServerSession } from "next-auth";
-import { nextAuthOptions } from "../api/auth/[...nextauth]/route";
 import { Login, Logout } from "../auth";
 import { prismaClient } from "@/lib/prisma";
 
 export default async function Customers() {
-  const session = await getServerSession(nextAuthOptions);
+  const session = await getServerSession();
   const users = await prismaClient.users.findMany({
     select: {
       id: true,

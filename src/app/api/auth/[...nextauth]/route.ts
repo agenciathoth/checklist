@@ -4,7 +4,7 @@ import sha256 from "crypto-js/sha256";
 
 import { prismaClient } from "@/lib/prisma";
 
-export const nextAuthOptions: NextAuthOptions = {
+const nextAuthOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   providers: [
     CredentialsProvider({
