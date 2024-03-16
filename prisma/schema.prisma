@@ -9,17 +9,18 @@ datasource db {
 
 enum UserRole {
   ADMIN
-  EMPLOYEE
+  EDITOR
 }
 
 model Users {
-  id        String    @id @default(cuid())
-  name      String
-  email     String    @unique
-  password  String    @unique
-  role      UserRole
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
+  id         String    @id @default(cuid())
+  name       String
+  email      String    @unique
+  password   String    @unique
+  role       UserRole
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+  archivedAt DateTime? @map("archived_at")
 
   @@map("users")
 }

@@ -15,7 +15,7 @@ export function UserForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<CreateUserSchema>({
     resolver: zodResolver(createUserSchema),
   });
@@ -23,7 +23,6 @@ export function UserForm() {
   const handleCreateUser = async (data: CreateUserSchema) => {
     try {
       const response = await api.post("users", data);
-      console.log(response);
 
       toast.success("Usuário criado com sucesso!");
     } catch (error) {
@@ -68,7 +67,7 @@ export function UserForm() {
           error={errors.role?.message}
           options={[
             { label: "Administrador", value: UserRole.ADMIN },
-            { label: "Editor", value: UserRole.EMPLOYEE },
+            { label: "Editor", value: UserRole.EDITOR },
           ]}
           {...register("role")}
         />
@@ -78,7 +77,7 @@ export function UserForm() {
         type="submit"
         className="min-w-44 mx-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
       >
-        Criar
+        {!isSubmitting ? "Adicionar" : "Adicionando..."}
       </button>
     </form>
   );

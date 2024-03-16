@@ -12,15 +12,14 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Não autorizado", { status: 401 });
   }
 
-  const body = await request.json();
-
   try {
-    const data = await createUserSchema.parseAsync(body);
+    const body = await request.json();
+    const { name, email, password, role } = await createUserSchema.parseAsync(
+      body
+    );
 
     const userAlreadyExists = await prismaClient.users.findUnique({
-      where: {
-        email: body.email,
-      },
+      where: { email },
     });
 
     if (userAlreadyExists) {
@@ -31,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await prismaClient.users.create({
-      data,
+      data: { name, email, password, role },
       select: {
         id: true,
         name: true,

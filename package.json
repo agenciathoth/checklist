@@ -19,12 +19,14 @@
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.0",
     "crypto-js": "^4.2.0",
     "next-auth": "^4.24.6",
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.51.0",
     "react-toastify": "^10.0.5",
+    "tailwind-merge": "^2.2.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {
