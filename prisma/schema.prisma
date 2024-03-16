@@ -13,14 +13,35 @@ enum UserRole {
 }
 
 model Users {
-  id         String    @id @default(cuid())
+  id         String      @id @default(cuid())
   name       String
-  email      String    @unique
-  password   String    @unique
+  email      String      @unique
+  password   String
   role       UserRole
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime? @updatedAt @map("updated_at")
-  archivedAt DateTime? @map("archived_at")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime?   @updatedAt @map("updated_at")
+  archivedAt DateTime?   @map("archived_at")
+
+  customers  Customers[]
 
   @@map("users")
+}
+
+model Customers {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  whatsappLink String?   @map("whatsapp_link")
+  contractLink String?   @map("contract_link")
+  galleryLink  String?   @map("gallery_link")
+  scheduleLink String?   @map("schedule_link")
+  presentation String?   @map("presentation")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime? @updatedAt @map("updated_at")
+  archivedAt   DateTime? @map("archived_at")
+  userId       String    @map("user_id")
+
+  updatedBy Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("customers")
 }
