@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import { ToastContainer } from "react-toastify";
 
 import { Header } from "@/components/Header";
+import { Providers } from "./providers";
 
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -25,17 +26,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={poppins.className}>
-        <ToastContainer />
+        <Providers>
+          <ToastContainer />
 
-        <div
-          className={`relative flex flex-col max-w-[600px] min-h-screen mx-auto pb-8`}
-        >
-          <Header />
+          <div
+            className={`relative flex flex-col max-w-[600px] min-h-screen mx-auto pb-8`}
+          >
+            <Header />
 
-          <main className="flex-1 relative flex flex-col gap-8 px-4 -mt-5">
-            {children}
-          </main>
-        </div>
+            <main className="flex-1 relative flex flex-col gap-8 px-4 -mt-5">
+              {children}
+            </main>
+          </div>
+        </Providers>
       </body>
     </html>
   );

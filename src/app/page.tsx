@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { Lock, At } from "@phosphor-icons/react";
 import { Input } from "@/components/Input";
 import { TitlePage } from "@/components/TitlePage";
@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
+import { useEffect } from "react";
 
 const authSchema = z.object({
   email: z
@@ -22,6 +23,7 @@ type AuthSchema = z.infer<typeof authSchema>;
 
 export default function Home() {
   const router = useRouter();
+  const session = useSession();
 
   const {
     register,
@@ -30,6 +32,14 @@ export default function Home() {
   } = useForm<AuthSchema>({
     resolver: zodResolver(authSchema),
   });
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    router.push("/funcionarios");
+  }, [session, router]);
 
   const handleAuth = async ({ email, password }: AuthSchema) => {
     const result = await signIn("credentials", {
@@ -46,6 +56,10 @@ export default function Home() {
 
     router.replace("/funcionarios");
   };
+
+  if (session.status !== "unauthenticated") {
+    return null;
+  }
 
   return (
     <>
