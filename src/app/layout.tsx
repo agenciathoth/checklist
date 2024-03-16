@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-
-import { Providers } from "./providers";
+import { ToastContainer } from "react-toastify";
 
 import { Header } from "@/components/Header";
 
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -33,7 +31,10 @@ export default function RootLayout({
           className={`relative flex flex-col max-w-[600px] min-h-screen mx-auto pb-8`}
         >
           <Header />
-          {children}
+
+          <main className="flex-1 relative flex flex-col gap-8 px-4 -mt-5">
+            {children}
+          </main>
         </div>
       </body>
     </html>

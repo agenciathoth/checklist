@@ -16,6 +16,7 @@
     "@next-auth/prisma-adapter": "^0.4.4-canary.81",
     "@phosphor-icons/react": "^2.0.15",
     "@prisma/client": "^5.10.2",
+    "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "crypto-js": "^4.2.0",

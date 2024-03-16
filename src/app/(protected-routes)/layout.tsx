@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
 import { nextAuthOptions } from "@/config/auth";
+import { TopNav } from "@/components/TopNav";
+import { UserRole } from "@prisma/client";
 
 interface ProtectedLayoutProps {
   children: ReactNode;
@@ -17,5 +19,10 @@ export default async function ProtectedLayout({
     redirect("/");
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <TopNav isAdmin={session.user.role === UserRole.ADMIN} />
+      {children}
+    </>
+  );
 }

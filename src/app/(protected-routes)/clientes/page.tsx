@@ -1,11 +1,18 @@
-import { Logout } from "@/app/auth";
+import { TitlePage } from "@/components/TitlePage";
 
 export default async function Customers() {
   return (
-    <div>
-      <Logout />
+    <>
+      <TitlePage>Clientes</TitlePage>
 
-      <h1>Clientes</h1>
-    </div>
+      <div className="h-[200vh]">
+        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Rem, voluptate
+        asperiores quaerat reprehenderit nesciunt animi sunt corrupti harum quos
+        repellendus eum totam aliquid nobis exercitationem iusto magnam fugiat
+        voluptatibus alias consequuntur. Sint sequi recusandae dolorem eaque
+        molestias, voluptatibus doloribus voluptatum non architecto itaque nulla
+        eum sunt, minima ducimus ad quas?
+      </div>
+    </>
   );
 }

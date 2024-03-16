@@ -48,7 +48,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex-1 relative flex flex-col gap-8 px-4 -mt-5">
+    <>
       <TitlePage>Autenticação</TitlePage>
 
       <form
@@ -82,6 +82,6 @@ export default function Home() {
           Entrar
         </button>
       </form>
-    </main>
+    </>
   );
 }
