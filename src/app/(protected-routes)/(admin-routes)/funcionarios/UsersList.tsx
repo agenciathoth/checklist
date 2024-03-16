@@ -17,7 +17,7 @@ interface UsersListProps {
 }
 
 export function UsersList({ users }: UsersListProps) {
-  const toggleArchive = async (id: string, isArchived: boolean) => {
+  const toggleArchiveUser = async (id: string, isArchived: boolean) => {
     if (!id) return;
     const isConfirmed = window.confirm(
       !isArchived
@@ -28,9 +28,7 @@ export function UsersList({ users }: UsersListProps) {
 
     const promise = async () => {
       try {
-        const response = await api.patch("/users/archive", {
-          id,
-        });
+        const response = await api.patch(`/users/${id}/archive`);
 
         console.log(response);
       } catch (error) {
@@ -47,6 +45,29 @@ export function UsersList({ users }: UsersListProps) {
       error: !isArchived
         ? "Não foi possível arquivar o usuário!"
         : "Não foi possível restaurar o usuário!",
+    });
+  };
+
+  const deleteUser = async (id: string) => {
+    if (!id) return;
+    const isConfirmed = window.confirm("Você deseja remover o usuário?");
+    if (!isConfirmed) return;
+
+    const promise = async () => {
+      try {
+        const response = await api.delete("/users/".concat(id));
+
+        console.log(response);
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    };
+
+    toast.promise(promise, {
+      pending: "Removendo...",
+      success: "Usuário removido com sucesso!",
+      error: "Não foi possível remover o usuário!",
     });
   };
 
@@ -89,7 +110,7 @@ export function UsersList({ users }: UsersListProps) {
                       type="button"
                       title="Arquivar"
                       className="flex p-2 bg-shape-text text-text rounded-full"
-                      onClick={() => toggleArchive(user.id, isArchived)}
+                      onClick={() => toggleArchiveUser(user.id, isArchived)}
                     >
                       <ArchiveBox size={16} weight="bold" />
                     </button>
@@ -100,7 +121,7 @@ export function UsersList({ users }: UsersListProps) {
                       type="button"
                       title="Restaurar"
                       className="flex p-2 bg-shape-text text-text rounded-full"
-                      onClick={() => toggleArchive(user.id, isArchived)}
+                      onClick={() => toggleArchiveUser(user.id, isArchived)}
                     >
                       <ClockClockwise size={16} weight="bold" />
                     </button>
@@ -109,7 +130,7 @@ export function UsersList({ users }: UsersListProps) {
                       type="button"
                       title="Remover"
                       className="flex p-2 bg-tertiary text-white rounded-full"
-                      onClick={() => alert("Remover")}
+                      onClick={() => deleteUser(user.id)}
                     >
                       <Trash size={16} weight="bold" />
                     </button>

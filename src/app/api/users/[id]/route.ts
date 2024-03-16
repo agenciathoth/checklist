@@ -6,40 +6,42 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError, z } from "zod";
 
-export async function POST(request: NextRequest) {
+export async function DELETE(request: NextRequest, { params }: any) {
   const session = await getServerSession(nextAuthOptions);
   if (!session || session.user.role !== UserRole.ADMIN) {
     return new NextResponse("Não autorizado", { status: 401 });
   }
 
   try {
-    const body = await request.json();
-    const { name, email, password, role } = await createUserSchema.parseAsync(
-      body
-    );
+    const { id } = await z.object({ id: z.string().min(1) }).parseAsync(params);
 
-    const userAlreadyExists = await prismaClient.users.findUnique({
-      where: { email },
+    const user = await prismaClient.users.findUnique({
+      where: { id },
     });
 
-    if (userAlreadyExists) {
+    if (!user) {
+      return new NextResponse("Não foi possível encontrar o usuário", {
+        status: 404,
+      });
+    }
+
+    const userIsArchived = user.archivedAt !== null;
+    if (!userIsArchived) {
       return new NextResponse(
-        "Já existe um usuário cadastrado com esse e-mail",
-        { status: 409 }
+        "Não é possível remover um usuário antes de arquivá-lo",
+        {
+          status: 403,
+        }
       );
     }
 
-    const user = await prismaClient.users.create({
-      data: { name, email, password, role },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
+    await prismaClient.users.delete({
+      where: { id },
     });
 
-    return NextResponse.json(user);
+    return new NextResponse(null, {
+      status: 204,
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       console.log(error.issues);

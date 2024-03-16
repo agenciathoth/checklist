@@ -1,18 +1,18 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
+import { UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { ZodError, z } from "zod";
 
-export async function PATCH(request: NextRequest) {
+export async function PATCH(request: NextRequest, { params }: any) {
   const session = await getServerSession(nextAuthOptions);
-  if (!session) {
+  if (!session || session.user.role !== UserRole.ADMIN) {
     return new NextResponse("Não autorizado", { status: 401 });
   }
 
   try {
-    const body = await request.json();
-    const { id } = await z.object({ id: z.string().min(1) }).parseAsync(body);
+    const { id } = await z.object({ id: z.string().min(1) }).parseAsync(params);
 
     const user = await prismaClient.users.findUnique({
       where: { id },
@@ -31,8 +31,15 @@ export async function PATCH(request: NextRequest) {
       },
     });
 
-    return NextResponse.json([]);
+    return new NextResponse(null, {
+      status: 204,
+    });
   } catch (error) {
+    if (error instanceof ZodError) {
+      console.log(error.issues);
+      return new NextResponse("Validation Error", { status: 400 });
+    }
+
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
