@@ -17,7 +17,9 @@ export const nextAuthOptions: NextAuthOptions = {
         password: { label: "password", type: "password " },
       },
 
-      async authorize(credentials, req) {
+      async authorize(credentials) {
+        console.log(credentials);
+
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
@@ -28,6 +30,8 @@ export const nextAuthOptions: NextAuthOptions = {
         if (!user) {
           return null;
         }
+
+        console.log(user);
 
         const passwordMatches = await compare(
           credentials.password,

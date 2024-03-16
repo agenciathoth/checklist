@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { SyntheticEvent, useState } from "react";
+import { Lock, At } from "@phosphor-icons/react";
+import { Input } from "@/components/Input";
+import { TitlePage } from "@/components/TitlePage";
 
 export default function Home() {
   const router = useRouter();
@@ -29,25 +32,41 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <form onSubmit={handleSubmit}>
-        <input
-          id="email"
-          type="email"
-          placeholder="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-        />
+    <main className="flex-1 relative flex flex-col gap-8 px-4 -mt-5">
+      <TitlePage>Autenticação</TitlePage>
 
-        <input
-          id="password"
-          type="password"
-          placeholder="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+      <form
+        className="flex flex-col gap-8 w-full p-5 bg-white rounded-xl drop-shadow-custom"
+        onSubmit={handleSubmit}
+      >
+        <h2 className="font-bold text-lg">Fazer login</h2>
 
-        <button type="submit">Entrar</button>
+        <div className="flex flex-col gap-4">
+          <Input
+            id="email"
+            type="email"
+            icon={<At />}
+            placeholder="E-mail"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+
+          <Input
+            id="password"
+            type="password"
+            icon={<Lock />}
+            placeholder="Senha"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="min-w-44 mx-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
+        >
+          Entrar
+        </button>
       </form>
     </main>
   );
