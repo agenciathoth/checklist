@@ -44,8 +44,7 @@ export default function Home() {
       return;
     }
 
-    // @TODO: redirect to users page if is admin
-    router.replace("/clientes");
+    router.replace("/funcionarios");
   };
 
   return (

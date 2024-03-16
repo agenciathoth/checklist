@@ -1,25 +1,27 @@
 import CredentialsProvider from "next-auth/providers/credentials";
-import sha256 from "crypto-js/sha256";
 
 import { prismaClient } from "@/lib/prisma";
 import { NextAuthOptions } from "next-auth";
 import { compare } from "bcrypt";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 export const SALT = 8;
 
 export const nextAuthOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prismaClient),
+
   session: { strategy: "jwt" },
+
   providers: [
     CredentialsProvider({
       name: "credentials",
+
       credentials: {
         email: { label: "email", type: "email" },
         password: { label: "password", type: "password " },
       },
 
       async authorize(credentials) {
-        console.log(credentials);
-
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
@@ -27,16 +29,16 @@ export const nextAuthOptions: NextAuthOptions = {
         const user = await prismaClient.users.findUnique({
           where: { email: credentials.email },
         });
+
         if (!user) {
           return null;
         }
-
-        console.log(user);
 
         const passwordMatches = await compare(
           credentials.password,
           user.password
         );
+
         if (!passwordMatches) {
           return null;
         }
@@ -50,4 +52,19 @@ export const nextAuthOptions: NextAuthOptions = {
       },
     }),
   ],
+
+  callbacks: {
+    async session({ session, token }) {
+      const user = await prismaClient.users.findUnique({
+        where: { id: token.sub },
+        select: { role: true },
+      });
+
+      if (user) {
+        session.user.role = user.role;
+      }
+
+      return session;
+    },
+  },
 };
