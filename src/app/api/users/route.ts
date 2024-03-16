@@ -2,6 +2,7 @@ import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
 import { createUserSchema } from "@/validators/user";
 import { UserRole } from "@prisma/client";
+import { hash } from "bcrypt";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError, z } from "zod";
@@ -29,8 +30,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const hashedPassword = await hash(password, 8);
     const user = await prismaClient.users.create({
-      data: { name, email, password, role },
+      data: { name, email, password: hashedPassword, role },
       select: {
         id: true,
         name: true,

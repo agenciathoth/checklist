@@ -13,7 +13,7 @@ export default async function Employees() {
   return (
     <>
       <TitlePage>Funcionários</TitlePage>
-      <UserForm />
+      <UserForm users={users} />
       <UsersList users={users} />
     </>
   );

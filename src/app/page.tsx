@@ -26,7 +26,7 @@ export default function Home() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<AuthSchema>({
     resolver: zodResolver(authSchema),
   });
@@ -79,7 +79,7 @@ export default function Home() {
           type="submit"
           className="min-w-44 mx-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
         >
-          Entrar
+          {!isSubmitting ? "Entrar" : "Entrando..."}
         </button>
       </form>
     </>

@@ -1,4 +1,5 @@
 "use client";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 
 import { Pill } from "@/components/Pill";
 import { api } from "@/lib/api";
@@ -17,6 +18,16 @@ interface UsersListProps {
 }
 
 export function UsersList({ users }: UsersListProps) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const editUser = (id: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("id", id);
+    router.replace(pathname.concat("?").concat(params.toString()));
+  };
+
   const toggleArchiveUser = async (id: string, isArchived: boolean) => {
     if (!id) return;
     const isConfirmed = window.confirm(
@@ -101,7 +112,7 @@ export function UsersList({ users }: UsersListProps) {
                       type="button"
                       title="Editar"
                       className="flex p-2 bg-secondary text-white rounded-full"
-                      onClick={() => alert("Editar")}
+                      onClick={() => editUser(user.id)}
                     >
                       <Pencil size={16} weight="bold" />
                     </button>

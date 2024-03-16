@@ -1,30 +1,68 @@
 "use client";
 
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
 import { api } from "@/lib/api";
-import { CreateUserSchema, createUserSchema } from "@/validators/user";
+import {
+  CreateUserSchema,
+  createUserSchema,
+  editUserSchema,
+} from "@/validators/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { At, Lock, User } from "@phosphor-icons/react";
-import { UserRole } from "@prisma/client";
+import { UserRole, Users } from "@prisma/client";
 import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
-export function UserForm() {
+interface UserFormProps {
+  users: Users[];
+}
+
+export function UserForm({ users }: UserFormProps) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const userId = searchParams.get("id");
+
+  const selectedUser = users.find(({ id }) => id === userId);
+  const isEditing = !!selectedUser;
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    reset,
   } = useForm<CreateUserSchema>({
-    resolver: zodResolver(createUserSchema),
+    values: {
+      name: selectedUser?.name || "",
+      email: selectedUser?.email || "",
+      password: "",
+      role: selectedUser?.role || UserRole.EDITOR,
+    },
+    resolver: zodResolver(isEditing ? editUserSchema : createUserSchema),
   });
+
+  const cancelEditUser = () => {
+    router.replace(pathname);
+    reset();
+  };
 
   const handleCreateUser = async (data: CreateUserSchema) => {
     try {
-      const response = await api.post("users", data);
+      isEditing && selectedUser
+        ? await api.put(`users/${selectedUser.id}`, data)
+        : await api.post("users", data);
 
-      toast.success("Usuário criado com sucesso!");
+      toast.success(
+        !isEditing
+          ? "Usuário criado com sucesso!"
+          : "Usuário editado com sucesso!"
+      );
+      reset();
     } catch (error) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data);
@@ -37,7 +75,9 @@ export function UserForm() {
       className="flex flex-col gap-8 w-full p-5 bg-white rounded-xl drop-shadow-custom"
       onSubmit={handleSubmit(handleCreateUser)}
     >
-      <h2 className="font-bold text-lg">Cadastro de funcionário</h2>
+      <h2 className="font-bold text-lg">
+        {isEditing ? "Edição de funcionário" : "Cadastro de funcionário"}
+      </h2>
 
       <div className="flex flex-col gap-4">
         <Input
@@ -49,6 +89,7 @@ export function UserForm() {
 
         <Input
           icon={<At />}
+          type="email"
           placeholder="E-mail"
           error={errors.email?.message}
           {...register("email")}
@@ -56,6 +97,7 @@ export function UserForm() {
 
         <Input
           icon={<Lock />}
+          type="password"
           placeholder="Senha"
           error={errors.password?.message}
           {...register("password")}
@@ -73,12 +115,30 @@ export function UserForm() {
         />
       </div>
 
-      <button
-        type="submit"
-        className="min-w-44 mx-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
-      >
-        {!isSubmitting ? "Adicionar" : "Adicionando..."}
-      </button>
+      <div className="flex justify-between">
+        {isEditing ? (
+          <button
+            type="button"
+            className="min-w-44 p-4 bg-shape-text text-text font-bold text-sm rounded-full uppercase disabled:opacity-50"
+            onClick={cancelEditUser}
+          >
+            Cancelar
+          </button>
+        ) : null}
+
+        <button
+          type="submit"
+          className="min-w-44 ml-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
+        >
+          {!isSubmitting
+            ? !isEditing
+              ? "Adicionar"
+              : "Editar"
+            : !isEditing
+            ? "Adicionando..."
+            : "Editando..."}
+        </button>
+      </div>
     </form>
   );
 }
