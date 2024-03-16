@@ -3,19 +3,23 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model Users {
-    id String @id @default(cuid())
-    name String
-    password String @unique
-    role String
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime? @updatedAt @map("updated_at")
-
-    @@map("users")
+enum UserRole {
+  ADMIN
+  EMPLOYEE
 }
 
+model Users {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String    @unique
+  role      UserRole
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
+  @@map("users")
+}

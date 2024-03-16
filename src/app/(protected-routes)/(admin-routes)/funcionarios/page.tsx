@@ -1,9 +1,12 @@
 import { getServerSession } from "next-auth";
-import { Login, Logout } from "../auth";
+
 import { prismaClient } from "@/lib/prisma";
 
-export default async function Customers() {
+import { Logout } from "@/app/auth";
+
+export default async function Employees() {
   const session = await getServerSession();
+
   const users = await prismaClient.users.findMany({
     select: {
       id: true,
@@ -14,11 +17,11 @@ export default async function Customers() {
 
   return (
     <div>
-      <h1>Olá, {JSON.stringify(session)}</h1>
-
-      <Login />
       <Logout />
 
+      <h1>Funcionários</h1>
+
+      <pre>{JSON.stringify(session)}</pre>
       <pre>{JSON.stringify(users)}</pre>
     </div>
   );

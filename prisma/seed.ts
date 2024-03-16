@@ -1,23 +1,20 @@
-import { PrismaClient } from "@prisma/client";
-import sha256 from "crypto-js/sha256";
-
-import { env } from "../src/config/env";
+import { PrismaClient, UserRole } from "@prisma/client";
+import { hash } from "bcrypt";
 
 const prisma = new PrismaClient();
 
 async function main() {
   const plainPassword = "Checklist@Neto";
-  const encryptedPassword = sha256(
-    plainPassword.concat(env.PASSWORD_SECRET ?? "")
-  ).toString();
+  const encryptedPassword = await hash(plainPassword, 8);
 
   await prisma.users.upsert({
     where: { password: encryptedPassword },
     update: {},
     create: {
       name: "Neto",
+      email: "vilsonsampaiodev@gmail.com",
       password: encryptedPassword,
-      role: "ADMIN",
+      role: UserRole.ADMIN,
     },
   });
 }

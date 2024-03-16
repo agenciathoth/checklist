@@ -3,9 +3,12 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["dev", "production", "test"]).default("dev"),
   DATABASE_URL: z.string().url(),
-  PASSWORD_SECRET: z.string(),
+  POSTGRES_USER: z.string(),
+  POSTGRES_PASS: z.string(),
+  POSTGRES_DB: z.string(),
   NEXTAUTH_URL: z.string().url(),
   NEXTAUTH_SECRET: z.string(),
+  PASSWORD_SECRET: z.string(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
