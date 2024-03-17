@@ -1,10 +1,9 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
-import { slugify } from "@/utils/slugify";
 import { createCustomerSchema } from "@/validators/customer";
-import { UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import slugify from "slugify";
 import { ZodError, z } from "zod";
 
 export async function POST(request: NextRequest) {
@@ -18,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { name, presentation, contract, gallery, schedule, whatsapp } =
       await createCustomerSchema.parseAsync(body);
 
-    let slug = slugify(name);
+    let slug = slugify(name.toLowerCase());
 
     const slugAlreadyExists = await prismaClient.customers.findFirst({
       where: {

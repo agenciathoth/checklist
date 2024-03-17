@@ -62,7 +62,7 @@ export function UserForm({ users }: UserFormProps) {
           ? "Usuário criado com sucesso!"
           : "Usuário editado com sucesso!"
       );
-      reset();
+      cancelEditUser();
     } catch (error) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data);

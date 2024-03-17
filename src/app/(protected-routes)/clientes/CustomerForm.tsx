@@ -63,7 +63,7 @@ export function CustomerForm({ customers }: CustomerFormProps) {
           ? "Cliente criado com sucesso!"
           : "Cliente editado com sucesso!"
       );
-      reset();
+      cancelEditCustomer();
     } catch (error) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data);

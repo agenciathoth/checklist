@@ -6,6 +6,7 @@ import { UserRole } from "@prisma/client";
 import { hash } from "bcrypt";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import slugify from "slugify";
 import { ZodError, z } from "zod";
 
 export async function PUT(request: NextRequest, { params }: any) {
@@ -31,10 +32,26 @@ export async function PUT(request: NextRequest, { params }: any) {
       });
     }
 
+    let slug = slugify(name.toLowerCase());
+
+    const slugAlreadyExists = await prismaClient.customers.findFirst({
+      where: {
+        slug: { startsWith: slug },
+      },
+      orderBy: { slug: "desc" },
+    });
+
+    if (slugAlreadyExists) {
+      const slugIndex = Number(slugAlreadyExists.slug.split("-").pop()) ?? 0;
+
+      slug += "-".concat(String(slugIndex + 1));
+    }
+
     await prismaClient.customers.update({
       where: { id },
       data: {
         name,
+        slug,
         presentation: presentation,
         whatsappLink: whatsapp,
         contractLink: contract,
