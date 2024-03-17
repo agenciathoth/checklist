@@ -8,17 +8,41 @@ import { redirect } from "next/navigation";
 import { CustomerPresentation } from "./CustomerPresentation";
 import { BottomNav } from "./BottomNav";
 import { TaskForm } from "./TaskForm";
+import { TasksList } from "./TasksLists";
 
 const getCustomerWithTasks = async (slug: string) => {
-  const customer = await prismaClient.customers.findUnique({
+  const [customer] = await prismaClient.customers.findMany({
     where: { slug },
-    include: { tasks: true },
   });
 
-  return customer;
+  const tasks = await prismaClient.tasks.findMany({
+    where: { customer: { id: customer.id } },
+    include: {
+      customer: true,
+      updatedBy: true,
+    },
+    orderBy: {
+      due: "asc",
+    },
+  });
+
+  return {
+    ...customer,
+    tasks: [...tasks].sort((a, b) => {
+      if (a.archivedAt) {
+        return 1;
+      }
+
+      if (b.archivedAt) {
+        return -1;
+      }
+
+      return 1;
+    }),
+  };
 };
 
-export type CustomersWithUser = Prisma.PromiseReturnType<
+export type CustomerWithTasks = Prisma.PromiseReturnType<
   typeof getCustomerWithTasks
 >;
 
@@ -49,11 +73,7 @@ export default async function Customer({ params }: any) {
         <TaskForm customerId={customer.id} tasks={customer.tasks} />
       ) : null}
 
-      <ul>
-        {customer.tasks.map((task) => (
-          <li key={task.id}>{task.title}</li>
-        ))}
-      </ul>
+      <TasksList tasks={customer.tasks} />
 
       <div className="h-16" />
 

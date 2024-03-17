@@ -26,10 +26,10 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { CreateTaskSchema, createTaskSchema } from "@/validators/task";
 import { TextArea } from "@/components/TextArea";
+import { CustomerWithTasks } from "./page";
 
-interface TaskFormProps {
+interface TaskFormProps extends Pick<CustomerWithTasks, "tasks"> {
   customerId: string;
-  tasks: Tasks[];
 }
 
 export function TaskForm({ customerId, tasks }: TaskFormProps) {
