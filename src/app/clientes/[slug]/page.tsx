@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { CustomerPresentation } from "./CustomerPresentation";
 import { BottomNav } from "./BottomNav";
+import { TaskForm } from "./TaskForm";
 
 const getCustomerWithTasks = async (slug: string) => {
   const customer = await prismaClient.customers.findUnique({
@@ -41,7 +42,9 @@ export default async function Customer({ params }: any) {
       <TitlePage>Checklist | {customer.name}</TitlePage>
 
       <CustomerPresentation presentation={customer.presentation || ""} />
-      <div>Form</div>
+
+      {session ? <TaskForm tasks={customer.tasks} /> : null}
+
       <div>List</div>
 
       <BottomNav {...customer} />

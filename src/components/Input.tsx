@@ -1,4 +1,5 @@
 import { IconContext } from "@phosphor-icons/react";
+import { parseISO, subMinutes } from "date-fns";
 import { ComponentProps, forwardRef } from "react";
 
 interface InputProps extends ComponentProps<"input"> {
@@ -7,7 +8,14 @@ interface InputProps extends ComponentProps<"input"> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  function Component({ icon, type = "text", error, ...props }, ref) {
+  function Component({ icon, type = "text", value, error, ...props }, ref) {
+    const formattedValue =
+      type === "datetime-local" && value && typeof value === "string"
+        ? subMinutes(parseISO(value), new Date().getTimezoneOffset())
+            .toISOString()
+            .slice(0, 16)
+        : value;
+
     return (
       <div className="flex flex-col w-full">
         <div
@@ -28,6 +36,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={type}
             className="flex-1  w-full block p-4 bg-transparent text-text outline-none placeholder:text-shape-text"
+            value={formattedValue}
             {...props}
           />
         </div>
