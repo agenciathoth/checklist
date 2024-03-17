@@ -1,18 +1,23 @@
 import { TitlePage } from "@/components/TitlePage";
+import { CustomerForm } from "./CustomerForm";
+import { prismaClient } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
 
 export default async function Customers() {
+  const customers = await prismaClient.customers.findMany();
+
   return (
     <>
       <TitlePage>Clientes</TitlePage>
 
-      <div className="h-[200vh]">
-        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Rem, voluptate
-        asperiores quaerat reprehenderit nesciunt animi sunt corrupti harum quos
-        repellendus eum totam aliquid nobis exercitationem iusto magnam fugiat
-        voluptatibus alias consequuntur. Sint sequi recusandae dolorem eaque
-        molestias, voluptatibus doloribus voluptatum non architecto itaque nulla
-        eum sunt, minima ducimus ad quas?
-      </div>
+      <CustomerForm customers={customers} />
+
+      <ul>
+        {customers.map((customer) => (
+          <li key={customer.id}>{customer.name}</li>
+        ))}
+      </ul>
     </>
   );
 }

@@ -34,7 +34,7 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (!session) {
+    if (!session || session.status !== "authenticated") {
       return;
     }
 
@@ -57,7 +57,7 @@ export default function Home() {
     router.replace("/funcionarios");
   };
 
-  if (session.status !== "unauthenticated") {
+  if (session && session.status !== "unauthenticated") {
     return null;
   }
 

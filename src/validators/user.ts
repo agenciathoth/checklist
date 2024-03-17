@@ -11,6 +11,8 @@ export const createUserSchema = z.object({
   role: z.nativeEnum(UserRole),
 });
 
+export type CreateUserSchema = z.infer<typeof createUserSchema>;
+
 export const editUserSchema = z.object({
   name: z.string().min(1, "O campo é obrigatório"),
   email: z
@@ -25,5 +27,3 @@ export const editUserSchema = z.object({
     .or(z.literal("")),
   role: z.nativeEnum(UserRole),
 });
-
-export type CreateUserSchema = z.infer<typeof createUserSchema>;

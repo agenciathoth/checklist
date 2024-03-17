@@ -57,10 +57,11 @@ export const nextAuthOptions: NextAuthOptions = {
     async session({ session, token }) {
       const user = await prismaClient.users.findUnique({
         where: { id: token.sub },
-        select: { role: true },
+        select: { id: true, role: true },
       });
 
       if (user) {
+        session.user.id = user.id;
         session.user.role = user.role;
       }
 
