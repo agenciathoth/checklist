@@ -28,10 +28,11 @@ import { CreateTaskSchema, createTaskSchema } from "@/validators/task";
 import { TextArea } from "@/components/TextArea";
 
 interface TaskFormProps {
+  customerId: string;
   tasks: Tasks[];
 }
 
-export function TaskForm({ tasks }: TaskFormProps) {
+export function TaskForm({ customerId, tasks }: TaskFormProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -52,6 +53,7 @@ export function TaskForm({ tasks }: TaskFormProps) {
       description: selectedTask?.description || "",
       due: selectedTask?.due || ("" as unknown as Date),
       responsible: selectedTask?.responsible || TaskResponsible.CUSTOMER,
+      customerId,
     },
     resolver: zodResolver(createTaskSchema),
   });
@@ -62,8 +64,6 @@ export function TaskForm({ tasks }: TaskFormProps) {
   };
 
   const handleCreateTask = async (data: CreateTaskSchema) => {
-    console.log(data);
-    /*
     try {
       isEditing && selectedTask
         ? await api.put(`tasks/${selectedTask.id}`, data)
@@ -79,7 +79,7 @@ export function TaskForm({ tasks }: TaskFormProps) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data);
       }
-    }*/
+    }
   };
 
   return (

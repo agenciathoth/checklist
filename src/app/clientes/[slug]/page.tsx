@@ -22,6 +22,8 @@ export type CustomersWithUser = Prisma.PromiseReturnType<
   typeof getCustomerWithTasks
 >;
 
+export const dynamic = "force-dynamic";
+
 export default async function Customer({ params }: any) {
   const session = await getServerSession(nextAuthOptions);
 
@@ -43,9 +45,17 @@ export default async function Customer({ params }: any) {
 
       <CustomerPresentation presentation={customer.presentation || ""} />
 
-      {session ? <TaskForm tasks={customer.tasks} /> : null}
+      {session ? (
+        <TaskForm customerId={customer.id} tasks={customer.tasks} />
+      ) : null}
 
-      <div>List</div>
+      <ul>
+        {customer.tasks.map((task) => (
+          <li key={task.id}>{task.title}</li>
+        ))}
+      </ul>
+
+      <div className="h-16" />
 
       <BottomNav {...customer} />
     </>
