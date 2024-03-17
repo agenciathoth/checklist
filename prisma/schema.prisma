@@ -13,16 +13,17 @@ enum UserRole {
 }
 
 model Users {
-  id         String      @id @default(cuid())
+  id         String    @id @default(cuid())
   name       String
-  email      String      @unique
+  email      String    @unique
   password   String
   role       UserRole
-  createdAt  DateTime    @default(now()) @map("created_at")
-  updatedAt  DateTime?   @updatedAt @map("updated_at")
-  archivedAt DateTime?   @map("archived_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+  archivedAt DateTime? @map("archived_at")
 
-  customers  Customers[]
+  customers Customers[]
+  tasks     Tasks[]
 
   @@map("users")
 }
@@ -41,7 +42,32 @@ model Customers {
   archivedAt   DateTime? @map("archived_at")
   userId       String    @map("user_id")
 
-  updatedBy Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks     Tasks[]
+  updatedBy Users   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("customers")
+}
+
+enum TaskResponsible {
+  CUSTOMER
+  AGENCY
+}
+
+model Tasks {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  due         DateTime
+  responsible TaskResponsible
+  completedAt DateTime?       @map("completed_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime?       @updatedAt @map("updated_at")
+  archivedAt  DateTime?       @map("archived_at")
+  customerId  String          @map("customer_id")
+  userId      String          @map("user_id")
+
+  customer  Customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  updatedBy Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("tasks")
 }
