@@ -9,9 +9,20 @@ export const dynamic = "force-dynamic";
 const getCustomers = async () => {
   const customers = await prismaClient.customers.findMany({
     include: { updatedBy: true },
+    orderBy: { name: "asc" },
   });
 
-  return customers;
+  return customers.sort((a, b) => {
+    if (a.archivedAt) {
+      return 1;
+    }
+
+    if (b.archivedAt) {
+      return -1;
+    }
+
+    return 1;
+  });
 };
 
 export type CustomersWithUser = Prisma.PromiseReturnType<typeof getCustomers>;
