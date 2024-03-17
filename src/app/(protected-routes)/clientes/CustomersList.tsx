@@ -181,7 +181,7 @@ export function CustomersList({ customers }: CustomersListProps) {
                       type="button"
                       title="Remover"
                       className="flex p-2 bg-tertiary text-white rounded-full"
-                      onClick={() => alert("Remover")}
+                      onClick={() => deleteCustomer(customer.id)}
                     >
                       <Trash size={16} weight="bold" />
                     </button>
