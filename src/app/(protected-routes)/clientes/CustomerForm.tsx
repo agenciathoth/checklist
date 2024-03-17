@@ -9,15 +9,15 @@ import {
   createCustomerSchema,
 } from "@/validators/customer";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Article, At, Link, Lock, User } from "@phosphor-icons/react";
-import { Customers, UserRole, Users } from "@prisma/client";
+import { Article, Link, User } from "@phosphor-icons/react";
 import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { TextArea } from "@/components/TextArea";
+import { CustomersWithUser } from "./page";
 
 interface CustomerFormProps {
-  customers: Customers[];
+  customers: CustomersWithUser;
 }
 
 export function CustomerForm({ customers }: CustomerFormProps) {
@@ -25,9 +25,9 @@ export function CustomerForm({ customers }: CustomerFormProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const userId = searchParams.get("id");
+  const customerId = searchParams.get("id");
 
-  const selectedCustomer = customers.find(({ id }) => id === userId);
+  const selectedCustomer = customers.find(({ id }) => id === customerId);
   const isEditing = !!selectedCustomer;
 
   const {
@@ -77,7 +77,7 @@ export function CustomerForm({ customers }: CustomerFormProps) {
       onSubmit={handleSubmit(handleCreateCustomer)}
     >
       <h2 className="font-bold text-lg">
-        {isEditing ? "Edição de funcionário" : "Cadastro de funcionário"}
+        {isEditing ? "Edição de cliente" : "Cadastro de cliente"}
       </h2>
 
       <div className="flex flex-col gap-4">
