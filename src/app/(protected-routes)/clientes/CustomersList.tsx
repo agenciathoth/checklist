@@ -161,7 +161,7 @@ export function CustomersList({ customers }: CustomersListProps) {
                       type="button"
                       title="Arquivar"
                       className="flex p-2 bg-shape-text text-text rounded-full"
-                      onClick={() => alert("Arquivar")}
+                      onClick={() => toggleArchiveCustomer(customer.id, false)}
                     >
                       <ArchiveBox size={16} weight="bold" />
                     </button>
@@ -172,7 +172,7 @@ export function CustomersList({ customers }: CustomersListProps) {
                       type="button"
                       title="Restaurar"
                       className="flex p-2 bg-shape-text text-text rounded-full"
-                      onClick={() => alert("Restaurar")}
+                      onClick={() => toggleArchiveCustomer(customer.id, true)}
                     >
                       <ClockClockwise size={16} weight="bold" />
                     </button>
