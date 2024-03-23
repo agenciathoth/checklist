@@ -16,13 +16,24 @@ import {
   Trash,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
 
 type TasksListProps = Pick<CustomerWithTasks, "tasks">;
 
 export function TasksList({ tasks }: TasksListProps) {
   const session = useSession();
 
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
   const [isChecking, setIsChecking] = useState(false);
+
+  const editTask = (id: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("id", id);
+    router.replace(pathname.concat("?").concat(params.toString()));
+  };
 
   return (
     <ul className="flex flex-col gap-6 p-6 bg-white rounded-xl drop-shadow-custom">
@@ -58,10 +69,11 @@ export function TasksList({ tasks }: TasksListProps) {
 
                     {session.data?.user.role === UserRole.ADMIN ? (
                       <Pill>
-                        {task.updatedAt &&
+                        {(task.updatedAt &&
                         !isEqual(task.createdAt, task.updatedAt)
                           ? "Última atualização por: "
-                          : "Criado por: ".concat(task.updatedBy.name)}
+                          : "Criado por: "
+                        ).concat(task.updatedBy.name)}
                       </Pill>
                     ) : null}
                   </div>
@@ -128,7 +140,7 @@ export function TasksList({ tasks }: TasksListProps) {
                         <button
                           type="button"
                           className="flex items-center justify-center w-7 h-7 bg-secondary text-white rounded-full"
-                          onClick={() => alert("Edit")}
+                          onClick={() => editTask(task.id)}
                         >
                           <Pencil size={16} weight="bold" />
                         </button>

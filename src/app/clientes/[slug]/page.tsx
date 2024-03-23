@@ -68,11 +68,9 @@ export default async function Customer({ params }: any) {
       <TitlePage>Checklist | {customer.name}</TitlePage>
 
       <CustomerPresentation presentation={customer.presentation || ""} />
-
       {session ? (
         <TaskForm customerId={customer.id} tasks={customer.tasks} />
       ) : null}
-
       <TasksList tasks={customer.tasks} />
 
       <div className="h-16" />

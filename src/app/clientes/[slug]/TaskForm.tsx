@@ -27,6 +27,8 @@ import { toast } from "react-toastify";
 import { CreateTaskSchema, createTaskSchema } from "@/validators/task";
 import { TextArea } from "@/components/TextArea";
 import { CustomerWithTasks } from "./page";
+import { useEffect } from "react";
+import { subMinutes } from "date-fns";
 
 interface TaskFormProps extends Pick<CustomerWithTasks, "tasks"> {
   customerId: string;
@@ -47,11 +49,16 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    setValue,
   } = useForm<CreateTaskSchema>({
     values: {
       title: selectedTask?.title || "",
       description: selectedTask?.description || "",
-      due: selectedTask?.due || ("" as unknown as Date),
+      due: selectedTask
+        ? subMinutes(selectedTask.due, new Date().getTimezoneOffset())
+            .toISOString()
+            .slice(0, 16)
+        : "",
       responsible: selectedTask?.responsible || TaskResponsible.CUSTOMER,
       customerId,
     },
