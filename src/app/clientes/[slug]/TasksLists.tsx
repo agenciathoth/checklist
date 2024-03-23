@@ -17,6 +17,8 @@ import {
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { toast } from "react-toastify";
 
 type TasksListProps = Pick<CustomerWithTasks, "tasks">;
 
@@ -33,6 +35,37 @@ export function TasksList({ tasks }: TasksListProps) {
     const params = new URLSearchParams(searchParams);
     params.set("id", id);
     router.replace(pathname.concat("?").concat(params.toString()));
+  };
+
+  const toggleArchiveTask = async (id: string, isArchived: boolean) => {
+    if (!id) return;
+    const isConfirmed = window.confirm(
+      !isArchived
+        ? "Você deseja arquivar a tarefa?"
+        : "Você deseja restaurar a tarefa?"
+    );
+    if (!isConfirmed) return;
+
+    const promise = async () => {
+      try {
+        const response = await api.patch(`/tasks/${id}/archive`);
+
+        console.log(response);
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    };
+
+    toast.promise(promise, {
+      pending: !isArchived ? "Arquivando..." : "Restaurando...",
+      success: !isArchived
+        ? "Tarefa arquivada com sucesso!"
+        : "Tarefa restaurada com sucesso!",
+      error: !isArchived
+        ? "Não foi possível arquivar a tarefa!"
+        : "Não foi possível restaurar a tarefa!",
+    });
   };
 
   return (
@@ -149,7 +182,7 @@ export function TasksList({ tasks }: TasksListProps) {
                           type="button"
                           title="Arquivar"
                           className="flex items-center justify-center w-7 h-7 bg-shape-text text-text rounded-full"
-                          onClick={() => alert("Arquivar")}
+                          onClick={() => toggleArchiveTask(task.id, false)}
                         >
                           <ArchiveBox size={16} weight="bold" />
                         </button>
@@ -160,7 +193,7 @@ export function TasksList({ tasks }: TasksListProps) {
                           type="button"
                           title="Restaurar"
                           className="flex items-center justify-center w-7 h-7 bg-shape-text text-text rounded-full"
-                          onClick={() => alert("Restaurar")}
+                          onClick={() => toggleArchiveTask(task.id, true)}
                         >
                           <ClockClockwise size={16} weight="bold" />
                         </button>
