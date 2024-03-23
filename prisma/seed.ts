@@ -8,8 +8,11 @@ async function main() {
   const encryptedPassword = await hash(plainPassword, 8);
 
   await prisma.users.upsert({
-    where: { password: encryptedPassword },
-    update: {},
+    where: { email: "vilsonsampaiodev@gmail.com" },
+    update: {
+      password: encryptedPassword,
+      role: UserRole.ADMIN,
+    },
     create: {
       name: "Neto",
       email: "vilsonsampaiodev@gmail.com",
