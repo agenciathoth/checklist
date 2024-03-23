@@ -8,7 +8,6 @@ const envSchema = z.object({
   POSTGRES_DB: z.string(),
   NEXTAUTH_URL: z.string().url(),
   NEXTAUTH_SECRET: z.string(),
-  PASSWORD_SECRET: z.string(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
