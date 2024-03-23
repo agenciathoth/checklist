@@ -6,22 +6,12 @@ import { Lock, At } from "@phosphor-icons/react";
 import { Input } from "@/components/Input";
 import { TitlePage } from "@/components/TitlePage";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
+import { authSchema, AuthSchema } from "@/validators/auth";
 
-const authSchema = z.object({
-  email: z
-    .string()
-    .email("Informe um e-mail válido")
-    .min(1, "O campo é obrigatório"),
-  password: z.string().min(1, "O campo é obrigatório"),
-});
-
-type AuthSchema = z.infer<typeof authSchema>;
-
-export default function Home() {
+export default function Auth() {
   const router = useRouter();
   const session = useSession();
 
