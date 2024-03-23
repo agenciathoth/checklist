@@ -48,9 +48,7 @@ export function TasksList({ tasks }: TasksListProps) {
 
     const promise = async () => {
       try {
-        const response = await api.patch(`/tasks/${id}/archive`);
-
-        console.log(response);
+        await api.patch(`/tasks/${id}/archive`);
       } catch (error) {
         console.error(error);
         throw error;
@@ -65,6 +63,27 @@ export function TasksList({ tasks }: TasksListProps) {
       error: !isArchived
         ? "Não foi possível arquivar a tarefa!"
         : "Não foi possível restaurar a tarefa!",
+    });
+  };
+
+  const deleteCustomer = async (id: string) => {
+    if (!id) return;
+    const isConfirmed = window.confirm("Você deseja remover a tarefa?");
+    if (!isConfirmed) return;
+
+    const promise = async () => {
+      try {
+        await api.delete("/tasks/".concat(id));
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    };
+
+    toast.promise(promise, {
+      pending: "Removendo...",
+      success: "Tarefa removida com sucesso!",
+      error: "Não foi possível remover a tarefa!",
     });
   };
 
@@ -201,7 +220,7 @@ export function TasksList({ tasks }: TasksListProps) {
                         <button
                           type="button"
                           className="flex items-center justify-center w-7 h-7 bg-tertiary text-white rounded-full"
-                          onClick={() => alert("Delete")}
+                          onClick={() => deleteCustomer(task.id)}
                         >
                           <Trash size={16} weight="bold" />
                         </button>

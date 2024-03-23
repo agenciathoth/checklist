@@ -39,9 +39,7 @@ export function UsersList({ users }: UsersListProps) {
 
     const promise = async () => {
       try {
-        const response = await api.patch(`/users/${id}/archive`);
-
-        console.log(response);
+        await api.patch(`/users/${id}/archive`);
       } catch (error) {
         console.error(error);
         throw error;
@@ -66,9 +64,7 @@ export function UsersList({ users }: UsersListProps) {
 
     const promise = async () => {
       try {
-        const response = await api.delete("/users/".concat(id));
-
-        console.log(response);
+        await api.delete("/users/".concat(id));
       } catch (error) {
         console.error(error);
         throw error;

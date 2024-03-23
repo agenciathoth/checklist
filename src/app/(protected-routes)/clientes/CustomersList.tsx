@@ -62,9 +62,7 @@ export function CustomersList({ customers }: CustomersListProps) {
 
     const promise = async () => {
       try {
-        const response = await api.patch(`/customers/${id}/archive`);
-
-        console.log(response);
+        await api.patch(`/customers/${id}/archive`);
       } catch (error) {
         console.error(error);
         throw error;
@@ -89,9 +87,7 @@ export function CustomersList({ customers }: CustomersListProps) {
 
     const promise = async () => {
       try {
-        const response = await api.delete("/customers/".concat(id));
-
-        console.log(response);
+        await api.delete("/customers/".concat(id));
       } catch (error) {
         console.error(error);
         throw error;
