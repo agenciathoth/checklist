@@ -10,13 +10,16 @@ import { BottomNav } from "./BottomNav";
 import { TaskForm } from "./TaskForm";
 import { TasksList } from "./TasksLists";
 
-const getCustomerWithTasks = async (slug: string) => {
+const getCustomerWithTasks = async (slug: string, isLogged?: boolean) => {
   const [customer] = await prismaClient.customers.findMany({
     where: { slug },
   });
 
   const tasks = await prismaClient.tasks.findMany({
-    where: { customer: { id: customer.id } },
+    where: {
+      ...(!isLogged ? { archivedAt: null } : {}),
+      customer: { id: customer.id },
+    },
     include: {
       customer: true,
       updatedBy: true,
@@ -51,7 +54,7 @@ export const dynamic = "force-dynamic";
 export default async function Customer({ params }: any) {
   const session = await getServerSession(nextAuthOptions);
 
-  const customer = await getCustomerWithTasks(params.slug);
+  const customer = await getCustomerWithTasks(params.slug, !!session);
 
   if (!customer) {
     if (session) {
