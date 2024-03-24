@@ -15,6 +15,11 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "Checklist Thoth",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({
