@@ -20,7 +20,7 @@ import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "react-toastify";
 
-type TasksListProps = Pick<CustomerWithTasks, "tasks">;
+type TasksListProps = Pick<Exclude<CustomerWithTasks, null>, "tasks">;
 
 export function TasksList({ tasks }: TasksListProps) {
   const session = useSession();
