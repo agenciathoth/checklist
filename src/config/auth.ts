@@ -30,7 +30,7 @@ export const nextAuthOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
-        if (!user) {
+        if (!user || user.archivedAt) {
           return null;
         }
 

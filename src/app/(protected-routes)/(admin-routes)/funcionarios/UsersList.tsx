@@ -1,4 +1,5 @@
 "use client";
+
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 
 import { Pill } from "@/components/Pill";
@@ -12,15 +13,21 @@ import {
 } from "@phosphor-icons/react";
 import { UserRole, Users } from "@prisma/client";
 import { toast } from "react-toastify";
+import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 interface UsersListProps {
   users: Users[];
 }
 
-export function UsersList({ users }: UsersListProps) {
+export function UsersList({ users: _users }: UsersListProps) {
+  const session = useSession();
+
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+
+  const [users, setUsers] = useState(_users);
 
   const editUser = (id: string) => {
     const params = new URLSearchParams(searchParams);
@@ -40,6 +47,19 @@ export function UsersList({ users }: UsersListProps) {
     const promise = async () => {
       try {
         await api.patch(`/users/${id}/archive`);
+
+        setUsers((prevState) =>
+          prevState.map((user) => {
+            if (user.id === id) {
+              return {
+                ...user,
+                archivedAt: user.archivedAt ? null : new Date(),
+              };
+            }
+
+            return user;
+          })
+        );
       } catch (error) {
         console.error(error);
         throw error;
@@ -65,6 +85,12 @@ export function UsersList({ users }: UsersListProps) {
     const promise = async () => {
       try {
         await api.delete("/users/".concat(id));
+
+        setUsers((prevState) =>
+          prevState.filter((user) => {
+            return user.id !== id;
+          })
+        );
       } catch (error) {
         console.error(error);
         throw error;
@@ -102,7 +128,16 @@ export function UsersList({ users }: UsersListProps) {
               <h4 className="text-md font-semibold"> {user.name}</h4>
 
               <div className="flex gap-2 ml-auto">
-                {!isArchived ? (
+                {session.data?.user.id === user.id ? (
+                  <button
+                    type="button"
+                    title="Editar"
+                    className="flex p-2 bg-secondary text-white rounded-full"
+                    onClick={() => editUser(user.id)}
+                  >
+                    <Pencil size={16} weight="bold" />
+                  </button>
+                ) : !isArchived ? (
                   <>
                     <button
                       type="button"

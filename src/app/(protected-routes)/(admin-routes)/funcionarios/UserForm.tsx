@@ -62,7 +62,9 @@ export function UserForm({ users }: UserFormProps) {
           ? "Usuário criado com sucesso!"
           : "Usuário editado com sucesso!"
       );
+
       cancelEditUser();
+      window.location.reload();
     } catch (error) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data);
@@ -115,11 +117,11 @@ export function UserForm({ users }: UserFormProps) {
         />
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between gap-4">
         {isEditing ? (
           <button
             type="button"
-            className="min-w-44 p-4 bg-shape-text text-text font-bold text-sm rounded-full uppercase disabled:opacity-50"
+            className="flex-1 sm:flex-initial sm:min-w-44 p-4 bg-shape-text text-text font-bold text-sm rounded-full uppercase disabled:opacity-50"
             onClick={cancelEditUser}
           >
             Cancelar
@@ -128,7 +130,7 @@ export function UserForm({ users }: UserFormProps) {
 
         <button
           type="submit"
-          className="min-w-44 ml-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
+          className="flex-1 sm:flex-initial sm:min-w-44 ml-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
         >
           {!isSubmitting
             ? !isEditing
