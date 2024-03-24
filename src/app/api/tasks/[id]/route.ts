@@ -47,6 +47,7 @@ export async function PUT(request: NextRequest, { params }: any) {
       return new NextResponse("Validation Error", { status: 400 });
     }
 
+    console.log(error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
@@ -89,6 +90,7 @@ export async function DELETE(request: NextRequest, { params }: any) {
       return new NextResponse("Validation Error", { status: 400 });
     }
 
+    console.log(error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
