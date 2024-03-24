@@ -5,22 +5,9 @@ import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
 import { api } from "@/lib/api";
-import {
-  CreateUserSchema,
-  createUserSchema,
-  editUserSchema,
-} from "@/validators/user";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  At,
-  Balloon,
-  Calendar,
-  ChatText,
-  CheckCircle,
-  Lock,
-  User,
-} from "@phosphor-icons/react";
-import { TaskResponsible, Tasks, UserRole, Users } from "@prisma/client";
+import { Calendar, ChatText, CheckCircle, User } from "@phosphor-icons/react";
+import { TaskResponsible } from "@prisma/client";
 import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -49,7 +36,6 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    setValue,
   } = useForm<CreateTaskSchema>({
     values: {
       title: selectedTask?.title || "",

@@ -74,7 +74,7 @@ export default async function Customer({ params }: any) {
       {session ? (
         <TaskForm customerId={customer.id} tasks={customer.tasks} />
       ) : null}
-      <TasksList tasks={customer.tasks} />
+      {!!customer.tasks.length && <TasksList tasks={customer.tasks} />}
 
       <div className="h-16" />
 

@@ -118,10 +118,11 @@ export function CustomersList({ customers }: CustomersListProps) {
           >
             {session.data?.user.role === UserRole.ADMIN ? (
               <Pill>
-                {customer.updatedAt &&
+                {(customer.updatedAt &&
                 isEqual(customer.createdAt, customer.updatedAt)
                   ? "Criado por: "
-                  : "Última atualização por: ".concat(customer.updatedBy.name)}
+                  : "Última atualização por: "
+                ).concat(customer.updatedBy.name)}
               </Pill>
             ) : null}
 

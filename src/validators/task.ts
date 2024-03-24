@@ -6,8 +6,11 @@ export const createTaskSchema = z.object({
   description: z.string().optional().or(z.literal("")),
   due: z
     .string()
-    .datetime("Insira uma data válida")
-    .min(1, "O campo é obrigatório"),
+    .min(1, "O campo é obrigatório")
+    .refine(
+      (value) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(value),
+      { message: "Insira uma data válida" }
+    ),
   responsible: z.nativeEnum(TaskResponsible),
   customerId: z.string().cuid(),
 });
