@@ -17,7 +17,8 @@ import { CustomerWithTasks } from "./page";
 import { useEffect } from "react";
 import { subMinutes } from "date-fns";
 
-interface TaskFormProps extends Pick<CustomerWithTasks, "tasks"> {
+interface TaskFormProps
+  extends Pick<Exclude<CustomerWithTasks, null>, "tasks"> {
   customerId: string;
 }
 
