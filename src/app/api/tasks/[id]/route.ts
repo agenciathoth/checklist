@@ -1,6 +1,7 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
 import { createTaskSchema } from "@/validators/task";
+import { parseISO } from "date-fns";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError, z } from "zod";
@@ -32,7 +33,7 @@ export async function PUT(request: NextRequest, { params }: any) {
       data: {
         title,
         description,
-        due,
+        due: parseISO(due),
         responsible,
         updatedBy: {
           connect: { id: session.user.id },

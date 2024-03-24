@@ -149,6 +149,12 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
     const promise = async () => {
       try {
         await api.delete("/tasks/".concat(id));
+
+        setTasks((prevState) => {
+          return prevState.filter((task) => {
+            return task.id !== id;
+          });
+        });
       } catch (error) {
         console.error(error);
         throw error;
