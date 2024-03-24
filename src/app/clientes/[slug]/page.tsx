@@ -11,9 +11,13 @@ import { TaskForm } from "./TaskForm";
 import { TasksList } from "./TasksLists";
 
 const getCustomerWithTasks = async (slug: string, isLogged?: boolean) => {
-  const [customer] = await prismaClient.customers.findMany({
+  const customer = await prismaClient.customers.findFirst({
     where: { slug },
   });
+
+  if (!customer) {
+    return null;
+  }
 
   const tasks = await prismaClient.tasks.findMany({
     where: {
@@ -61,7 +65,11 @@ export default async function Customer({ params }: any) {
       redirect("/clientes");
     }
 
-    return null;
+    return (
+      <>
+        <TitlePage>Checklist | Cliente não encontrado</TitlePage>
+      </>
+    );
   }
 
   return (
