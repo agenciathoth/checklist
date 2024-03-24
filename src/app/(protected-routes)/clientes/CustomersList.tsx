@@ -19,17 +19,20 @@ import { useSession } from "next-auth/react";
 import { CustomersWithUser } from "./page";
 import { isEqual } from "date-fns";
 import { copyToClipboard } from "@/utils/copyToClipboard";
+import { useState } from "react";
 
 interface CustomersListProps {
   customers: CustomersWithUser;
 }
 
-export function CustomersList({ customers }: CustomersListProps) {
+export function CustomersList({ customers: _customers }: CustomersListProps) {
   const session = useSession();
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+
+  const [customers, setCustomers] = useState<CustomersWithUser>(_customers);
 
   const copyCustomerLink = async (slug: string) => {
     try {
@@ -63,6 +66,19 @@ export function CustomersList({ customers }: CustomersListProps) {
     const promise = async () => {
       try {
         await api.patch(`/customers/${id}/archive`);
+
+        setCustomers((prevState) =>
+          prevState.map((customer) => {
+            if (customer.id === id) {
+              return {
+                ...customer,
+                archivedAt: customer.archivedAt ? null : new Date(),
+              };
+            }
+
+            return customer;
+          })
+        );
       } catch (error) {
         console.error(error);
         throw error;
@@ -88,6 +104,12 @@ export function CustomersList({ customers }: CustomersListProps) {
     const promise = async () => {
       try {
         await api.delete("/customers/".concat(id));
+
+        setCustomers((prevState) =>
+          prevState.filter((customer) => {
+            return customer.id !== id;
+          })
+        );
       } catch (error) {
         console.error(error);
         throw error;
