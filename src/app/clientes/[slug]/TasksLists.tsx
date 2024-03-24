@@ -36,11 +36,16 @@ export function TasksList({ tasks }: TasksListProps) {
 
   const toggleCheckTask = async (selectedTask: TasksListProps["tasks"][0]) => {
     if (!selectedTask) return;
+    if (
+      session.status !== "authenticated" &&
+      selectedTask.responsible === TaskResponsible.AGENCY
+    )
+      return;
 
     setSelectedTask(selectedTask);
 
     const isConfirmed =
-      session && selectedTask.responsible === TaskResponsible.CUSTOMER
+      session.data && selectedTask.responsible === TaskResponsible.CUSTOMER
         ? window.confirm(
             "Atenção!\n\nEssa tarefa é de responsabilidade do cliente.\n".concat(
               !selectedTask.completedAt
@@ -204,7 +209,8 @@ export function TasksList({ tasks }: TasksListProps) {
                     }
                     disabled={
                       (selectedTask === task && isChecking) ||
-                      (!session && task.responsible === TaskResponsible.AGENCY)
+                      (!session.data &&
+                        task.responsible === TaskResponsible.AGENCY)
                     }
                     onClick={() => toggleCheckTask(task)}
                   >
@@ -220,7 +226,7 @@ export function TasksList({ tasks }: TasksListProps) {
                   </button>
                 ) : null}
 
-                {session ? (
+                {session.data ? (
                   !isArchived ? (
                     <>
                       <button
