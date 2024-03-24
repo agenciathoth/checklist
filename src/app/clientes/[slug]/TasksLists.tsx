@@ -22,8 +22,10 @@ import { toast } from "react-toastify";
 
 type TasksListProps = Pick<Exclude<CustomerWithTasks, null>, "tasks">;
 
-export function TasksList({ tasks }: TasksListProps) {
+export function TasksList({ tasks: _tasks }: TasksListProps) {
   const session = useSession();
+
+  const [tasks, setTasks] = useState(_tasks);
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -59,6 +61,20 @@ export function TasksList({ tasks }: TasksListProps) {
     try {
       setIsChecking(true);
       await api.patch(`/tasks/${selectedTask.id}/check`);
+
+      setTasks((prevState) => {
+        return prevState.map((task) => {
+          if (task.id === selectedTask.id) {
+            return {
+              ...task,
+              completedAt: selectedTask.completedAt ? null : new Date(),
+            };
+          }
+
+          return task;
+        });
+      });
+
       toast.success(
         !selectedTask.completedAt
           ? "Tarefa marcada como finalizada com sucesso!"
@@ -95,6 +111,19 @@ export function TasksList({ tasks }: TasksListProps) {
     const promise = async () => {
       try {
         await api.patch(`/tasks/${id}/archive`);
+
+        setTasks((prevState) => {
+          return prevState.map((task) => {
+            if (task.id === id) {
+              return {
+                ...task,
+                archivedAt: task.archivedAt ? null : new Date(),
+              };
+            }
+
+            return task;
+          });
+        });
       } catch (error) {
         console.error(error);
         throw error;
