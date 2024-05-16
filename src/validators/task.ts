@@ -19,6 +19,7 @@ export const createTaskSchema = z.object({
       file: z.any().optional(),
       url: z.string().url(),
       order: z.number().min(1),
+      isVideo: z.boolean().optional(),
     })
   ),
 });

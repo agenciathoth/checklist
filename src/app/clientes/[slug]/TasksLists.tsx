@@ -26,6 +26,7 @@ import { toast } from "react-toastify";
 type TasksListProps = Pick<Exclude<CustomerWithTasks, null>, "tasks">;
 
 import "swiper/css";
+import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { getMediaURL } from "@/lib/aws";
 
@@ -332,7 +333,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                   className="w-full"
                   slidesPerView={1}
                   pagination={{
-                    el: ".swiperPagination",
+                    el: `.swiperPagination-${task.id}`,
                     clickable: true,
                     bulletClass:
                       "block w-2 h-2 rounded-full bg-black/25 cursor-pointer",
@@ -341,16 +342,30 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                 >
                   {task.medias.map((media) => (
                     <SwiperSlide key={media.id}>
-                      <img
-                        className="max-w-full object-cover mx-auto select-none"
-                        src={getMediaURL(media.path)}
-                        alt=""
-                      />
+                      {media.type.startsWith("video") ? (
+                        <video
+                          className="max-w-full object-cover mx-auto select-none"
+                          controls
+                        >
+                          <source src={getMediaURL(media.path)} />
+                        </video>
+                      ) : (
+                        <img
+                          className="max-w-full object-cover mx-auto select-none"
+                          src={getMediaURL(media.path)}
+                          alt=""
+                        />
+                      )}
                     </SwiperSlide>
                   ))}
                 </Swiper>
 
-                <div className="swiperPagination flex gap-2 justify-center mt-4"></div>
+                <div
+                  className={cn(
+                    `swiperPagination-${task.id}`,
+                    "flex gap-2 justify-center mt-4"
+                  )}
+                ></div>
               </>
             ) : null}
           </li>

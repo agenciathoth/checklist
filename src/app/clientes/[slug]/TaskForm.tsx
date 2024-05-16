@@ -16,6 +16,7 @@ import {
   User,
   Plus,
   X,
+  Play,
 } from "@phosphor-icons/react";
 import { TaskResponsible } from "@prisma/client";
 import { AxiosError } from "axios";
@@ -27,6 +28,7 @@ import { CustomerWithTasks } from "./page";
 import { subMinutes } from "date-fns";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { getMediaURL } from "@/lib/aws";
+import { cn } from "@/utils/cn";
 
 interface TaskFormProps
   extends Pick<Exclude<CustomerWithTasks, null>, "tasks"> {
@@ -72,10 +74,11 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
 
   useEffect(() => {
     setMedias(
-      selectedTask?.medias.map(({ id, path, order }) => ({
+      selectedTask?.medias.map(({ id, path, order, type }) => ({
         id,
         url: getMediaURL(path),
         order,
+        isVideo: type.startsWith("video"),
       })) || []
     );
   }, [selectedTask?.medias]);
@@ -162,10 +165,14 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
     if (!_files) return;
 
     const files = Array.from(_files);
-    const filteredFiles = files.filter(({ type }) => type.startsWith("image"));
+    const filteredFiles = files.filter(
+      ({ type }) => type.startsWith("image") || type.startsWith("video")
+    );
 
     if (filteredFiles.length < files.length) {
-      toast.info("Você não pode enviar arquivos que não sejam de tipo imagem");
+      toast.info(
+        "Você não pode enviar arquivos que não sejam de tipo imagem/vídeo"
+      );
     }
 
     setMedias((prevState) => {
@@ -173,6 +180,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
         file,
         url: URL.createObjectURL(file),
         order: prevState.length + index + 1,
+        isVideo: file.type.startsWith("video"),
       }));
 
       return [...prevState, ...uploadedMedias];
@@ -239,7 +247,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
             onSortEnd={onSortEnd}
             className="flex flex-wrap gap-4 w-full mt-4 select-none"
           >
-            {medias.map(({ id, url }, index) => (
+            {medias.map(({ id, url, isVideo }, index) => (
               <SortableItem key={id}>
                 <div
                   className="relative flex-shrink-0 aspect-square rounded-lg overflow-hidden cursor-grab select-none"
@@ -253,13 +261,30 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
                     <X size={16} weight="bold" />
                   </button>
 
-                  <Image
-                    className="absolute inset-0 size-full object-cover"
-                    src={url}
-                    alt=""
-                    fill
-                    draggable={false}
-                  />
+                  {isVideo ? (
+                    <>
+                      <i
+                        className={cn(
+                          "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                          "text-white drop-shadow-xl z-10"
+                        )}
+                      >
+                        <Play size={36} weight="fill" />
+                      </i>
+
+                      <video className="absolute inset-0 size-full object-cover">
+                        <source src={url} />
+                      </video>
+                    </>
+                  ) : (
+                    <Image
+                      className="absolute inset-0 size-full object-cover"
+                      src={url}
+                      alt=""
+                      fill
+                      draggable={false}
+                    />
+                  )}
                 </div>
               </SortableItem>
             ))}
@@ -282,7 +307,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
             className="hidden"
             type="file"
             ref={inputRef}
-            accept="image/*"
+            accept="image/*, video/*"
             onChange={onUpload}
             multiple
           />
