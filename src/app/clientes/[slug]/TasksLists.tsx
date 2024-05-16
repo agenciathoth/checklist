@@ -1,5 +1,7 @@
 "use client";
 
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
 import Image from "next/image";
 import { Pill } from "@/components/Pill";
 import { cn } from "@/utils/cn";
@@ -22,6 +24,9 @@ import { api } from "@/lib/api";
 import { toast } from "react-toastify";
 
 type TasksListProps = Pick<Exclude<CustomerWithTasks, null>, "tasks">;
+
+import "swiper/css";
+import "swiper/css/pagination";
 
 export function TasksList({ tasks: _tasks }: TasksListProps) {
   const session = useSession();
@@ -319,18 +324,35 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
             </p>
 
             {task.medias.length > 0 ? (
-              <ul className="flex flex-col gap-2">
-                {task.medias.map((media) => (
-                  <li key={media.id} className="block w-full h-fit">
-                    <img
-                      src={"https://thoth-checklist.s3.us-east-2.amazonaws.com/".concat(
-                        media.path
-                      )}
-                      alt=""
-                    />
-                  </li>
-                ))}
-              </ul>
+              <>
+                <Swiper
+                  autoHeight
+                  modules={[Pagination]}
+                  className="w-full"
+                  slidesPerView={1}
+                  pagination={{
+                    el: ".swiperPagination",
+                    clickable: true,
+                    bulletClass:
+                      "block w-2 h-2 rounded-full bg-black/25 cursor-pointer",
+                    bulletActiveClass: "!bg-secondary",
+                  }}
+                >
+                  {task.medias.map((media) => (
+                    <SwiperSlide key={media.id}>
+                      <img
+                        className="max-w-full object-cover mx-auto select-none"
+                        src={"https://thoth-checklist.s3.us-east-2.amazonaws.com/".concat(
+                          media.path
+                        )}
+                        alt=""
+                      />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+
+                <div className="swiperPagination flex gap-2 justify-center mt-4"></div>
+              </>
             ) : null}
           </li>
         );
