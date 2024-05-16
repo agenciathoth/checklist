@@ -26,6 +26,11 @@ const getCustomerWithTasks = async (slug: string, isLogged?: boolean) => {
     },
     include: {
       customer: true,
+      medias: {
+        orderBy: {
+          order: "asc",
+        },
+      },
       updatedBy: true,
     },
     orderBy: {

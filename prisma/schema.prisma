@@ -7,23 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  ADMIN
-  EDITOR
-}
-
 model Users {
-  id         String    @id @default(cuid())
+  id         String      @id @default(cuid())
   name       String
-  email      String    @unique
   password   String
   role       UserRole
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime? @updatedAt @map("updated_at")
-  archivedAt DateTime? @map("archived_at")
-
-  customers Customers[]
-  tasks     Tasks[]
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime?   @updatedAt @map("updated_at")
+  email      String      @unique
+  archivedAt DateTime?   @map("archived_at")
+  customers  Customers[]
+  medias     Medias[]
+  tasks      Tasks[]
 
   @@map("users")
 }
@@ -41,16 +36,10 @@ model Customers {
   updatedAt    DateTime? @updatedAt @map("updated_at")
   archivedAt   DateTime? @map("archived_at")
   userId       String    @map("user_id")
-
-  tasks     Tasks[]
-  updatedBy Users   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedBy    Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks        Tasks[]
 
   @@map("customers")
-}
-
-enum TaskResponsible {
-  CUSTOMER
-  AGENCY
 }
 
 model Tasks {
@@ -65,9 +54,34 @@ model Tasks {
   archivedAt  DateTime?       @map("archived_at")
   customerId  String          @map("customer_id")
   userId      String          @map("user_id")
-
-  customer  Customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  updatedBy Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  medias      Medias[]
+  customer    Customers       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  updatedBy   Users           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("tasks")
+}
+
+model Medias {
+  id         String    @id @default(cuid())
+  type       String
+  path       String
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+  userId     String    @map("user_id")
+  order      Int
+  taskId     String    @map("task_id")
+  task       Tasks     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("medias")
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+}
+
+enum TaskResponsible {
+  CUSTOMER
+  AGENCY
 }

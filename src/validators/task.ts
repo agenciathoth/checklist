@@ -13,6 +13,14 @@ export const createTaskSchema = z.object({
     ),
   responsible: z.nativeEnum(TaskResponsible),
   customerId: z.string().cuid(),
+  medias: z.array(
+    z.object({
+      id: z.string().cuid().optional(),
+      file: z.any().optional(),
+      url: z.string().url(),
+      order: z.number().min(1),
+    })
+  ),
 });
 
 export type CreateTaskSchema = z.infer<typeof createTaskSchema>;

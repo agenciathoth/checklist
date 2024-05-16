@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Pill } from "@/components/Pill";
 import { cn } from "@/utils/cn";
 import { TaskResponsible, Tasks, UserRole } from "@prisma/client";
@@ -313,13 +314,24 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
               {task.title}
             </h2>
 
-            <p
-              className={cn("text-sm", {
-                "line-through": isChecked,
-              })}
-            >
+            <p className={cn("text-sm", { "line-through": isChecked })}>
               {task.description}
             </p>
+
+            {task.medias.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {task.medias.map((media) => (
+                  <li key={media.id} className="block w-full h-fit">
+                    <img
+                      src={"https://thoth-checklist.s3.us-east-2.amazonaws.com/".concat(
+                        media.path
+                      )}
+                      alt=""
+                    />
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </li>
         );
       })}

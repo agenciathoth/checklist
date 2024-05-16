@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import SortableList, { SortableItem } from "react-easy-sort";
 import arrayMove from "array-move";
@@ -31,12 +32,7 @@ interface TaskFormProps
   customerId: string;
 }
 
-interface Media {
-  id?: number;
-  file?: File;
-  url: string;
-  order: number;
-}
+type Media = CreateTaskSchema["medias"][0];
 
 export function TaskForm({ customerId, tasks }: TaskFormProps) {
   const searchParams = useSearchParams();
@@ -63,6 +59,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
             .slice(0, 16)
         : "",
       responsible: selectedTask?.responsible || TaskResponsible.CUSTOMER,
+      medias: [],
       customerId,
     },
     resolver: zodResolver(createTaskSchema),
@@ -70,50 +67,48 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [medias, setMedias] = useState<Media[]>([
-    {
-      id: 1,
-      url: "https://gravatar.com/avatar/6e116730e1d57ba002c860abc6b20a8b?s=400&d=robohash&r=x",
-      order: 1,
-    },
-    {
-      id: 2,
-      url: "https://gravatar.com/avatar/b455ac4589c91ef50b4172f0adccd69d?s=400&d=robohash&r=x",
-      order: 2,
-    },
-    {
-      id: 3,
-      url: "https://gravatar.com/avatar/d2417fccb5d3a2dec14eb8ee47379d3d?s=400&d=robohash&r=x",
-      order: 3,
-    },
-    {
-      id: 4,
-      url: "https://gravatar.com/avatar/4fd40327b6d7377e8da32afffc2c9fe6?s=400&d=robohash&r=x",
-      order: 4,
-    },
-  ]);
+  const [medias, setMedias] = useState<Media[]>(
+    selectedTask?.medias.map(({ id, path, order }) => ({
+      id,
+      order,
+      url: path,
+    })) || []
+  );
 
   const cancelEditTask = () => {
     router.replace(pathname);
     reset();
   };
 
-  const handleCreateTask = async (_data: CreateTaskSchema) => {
+  const handleCreateTask = async ({
+    title,
+    description,
+    due,
+    responsible,
+    customerId,
+  }: CreateTaskSchema) => {
     try {
-      const data = { ..._data, medias };
-      /*
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description || "");
+      formData.append("due", due);
+      formData.append("responsible", responsible);
+      medias.forEach((media) => {
+        formData.append("medias", media.file);
+      });
+      formData.append("customerId", customerId);
+
       isEditing && selectedTask
-        ? await api.put(`tasks/${selectedTask.id}`, data)
-        : await api.post("tasks", data);
+        ? await api.put(`tasks/${selectedTask.id}`, formData)
+        : await api.post("tasks", formData);
+
       toast.success(
         !isEditing
           ? "Tarefa criada com sucesso!"
           : "Tarefa editada com sucesso!"
       );
       cancelEditTask();
-      window.location.reload();*/
-
-      console.log(data);
+      window.location.reload();
     } catch (error) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data);
@@ -139,16 +134,10 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
     if (!_files) return;
 
     const files = Array.from(_files);
-    const filteredFiles = files.filter(({ size, type }) => {
-      const sizeInMB = size / Math.pow(1024, 2);
-
-      return type.startsWith("image") && sizeInMB <= 10;
-    });
+    const filteredFiles = files.filter(({ type }) => type.startsWith("image"));
 
     if (filteredFiles.length < files.length) {
-      toast.info(
-        "Você não pode enviar arquivos que não sejam de imagem e/ou maiores que 10MB"
-      );
+      toast.info("Você não pode enviar arquivos que não sejam de tipo imagem");
     }
 
     setMedias((prevState) => {
@@ -236,11 +225,12 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
                     <X size={16} weight="bold" />
                   </button>
 
-                  <img
+                  <Image
+                    className="absolute inset-0 size-full object-cover"
                     src={url}
                     alt=""
+                    fill
                     draggable={false}
-                    className="absolute inset-0 size-full object-cover"
                   />
                 </div>
               </SortableItem>
