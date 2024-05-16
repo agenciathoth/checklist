@@ -27,6 +27,7 @@ type TasksListProps = Pick<Exclude<CustomerWithTasks, null>, "tasks">;
 
 import "swiper/css";
 import "swiper/css/pagination";
+import { getMediaURL } from "@/lib/aws";
 
 export function TasksList({ tasks: _tasks }: TasksListProps) {
   const session = useSession();
@@ -342,9 +343,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                     <SwiperSlide key={media.id}>
                       <img
                         className="max-w-full object-cover mx-auto select-none"
-                        src={"https://thoth-checklist.s3.us-east-2.amazonaws.com/".concat(
-                          media.path
-                        )}
+                        src={getMediaURL(media.path)}
                         alt=""
                       />
                     </SwiperSlide>

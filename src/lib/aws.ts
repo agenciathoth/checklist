@@ -7,3 +7,6 @@ export const s3 = new S3Client({
     secretAccessKey: process.env.AWS_S3_BUCKET_ACCESS_KEY_SECRET!,
   },
 });
+
+export const getMediaURL = (path: string) =>
+  "https://thoth-checklist.s3.us-east-2.amazonaws.com/".concat(path);

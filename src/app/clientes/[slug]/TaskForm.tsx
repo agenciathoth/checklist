@@ -25,7 +25,8 @@ import { CreateTaskSchema, createTaskSchema } from "@/validators/task";
 import { TextArea } from "@/components/TextArea";
 import { CustomerWithTasks } from "./page";
 import { subMinutes } from "date-fns";
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { getMediaURL } from "@/lib/aws";
 
 interface TaskFormProps
   extends Pick<Exclude<CustomerWithTasks, null>, "tasks"> {
@@ -67,13 +68,17 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [medias, setMedias] = useState<Media[]>(
-    selectedTask?.medias.map(({ id, path, order }) => ({
-      id,
-      order,
-      url: path,
-    })) || []
-  );
+  const [medias, setMedias] = useState<Media[]>([]);
+
+  useEffect(() => {
+    setMedias(
+      selectedTask?.medias.map(({ id, path, order }) => ({
+        id,
+        url: getMediaURL(path),
+        order,
+      })) || []
+    );
+  }, [selectedTask?.medias]);
 
   const cancelEditTask = () => {
     router.replace(pathname);
@@ -88,19 +93,44 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
     customerId,
   }: CreateTaskSchema) => {
     try {
+      const newMedias = medias.filter(({ file }) => Boolean(file));
+
       const formData = new FormData();
       formData.append("title", title);
       formData.append("description", description || "");
       formData.append("due", due);
       formData.append("responsible", responsible);
-      medias.forEach((media) => {
+      newMedias.forEach((media) => {
         formData.append("medias", media.file);
+        formData.append("mediasOrder", String(media.order));
       });
       formData.append("customerId", customerId);
 
-      isEditing && selectedTask
-        ? await api.put(`tasks/${selectedTask.id}`, formData)
-        : await api.post("tasks", formData);
+      if (isEditing && selectedTask) {
+        const deletedMedias = selectedTask.medias.filter(
+          ({ id }) => !medias.map(({ id }) => id).includes(id)
+        );
+        await Promise.all(
+          deletedMedias.map(({ id }) => api.delete(`media/${id}`))
+        );
+
+        const updatedMedias = medias.filter(({ id, order }) => {
+          const selectedMedia = selectedTask.medias.find(
+            ({ id: mediaId }) => mediaId === id
+          );
+
+          return selectedMedia && selectedMedia.order !== order;
+        });
+        await Promise.all(
+          updatedMedias.map(({ id, order }) =>
+            api.put(`media/${id}`, { order })
+          )
+        );
+
+        await api.put(`tasks/${selectedTask.id}`, formData);
+      } else {
+        await api.post("tasks", formData);
+      }
 
       toast.success(
         !isEditing
@@ -119,8 +149,6 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
   const onSortEnd = (oldIndex: number, newIndex: number) => {
     setMedias((medias) =>
       arrayMove([...medias], oldIndex, newIndex).map((media, index) => {
-        if (index !== newIndex) return media;
-
         return {
           ...media,
           order: index + 1,

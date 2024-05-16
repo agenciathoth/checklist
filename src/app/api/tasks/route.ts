@@ -9,6 +9,7 @@ import { ZodError } from "zod";
 import { randomBytes } from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/aws";
+import { uploadFile } from "@/utils/uploadFile";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(nextAuthOptions);
@@ -22,27 +23,14 @@ export async function POST(request: NextRequest) {
     const parsedMedias: Prisma.MediasCreateWithoutTaskInput[] =
       await Promise.all(
         (body.getAll("medias") as File[]).map(async (file, index) => {
-          const hash = randomBytes(4).toString("hex");
-          const filename = hash.concat("_").concat(file.name);
-
-          const [type] = file.type.split("/");
-          const path = (body.get("customerId") as string)
-            .concat("/")
-            .concat(filename);
-
-          const commandUpload = new PutObjectCommand({
-            Bucket: process.env.AWS_S3_BUCKET_NAME!,
-            Key: path,
-            Body: (await file.arrayBuffer()) as Buffer,
-            ContentType: file.type,
-          });
-
-          await s3.send(commandUpload);
+          const media = await uploadFile(
+            file,
+            body.get("customerId") as string
+          );
 
           return {
-            type,
+            ...media,
             order: index + 1,
-            path,
             uploadedBy: {
               connect: { id: session.user.id },
             },
