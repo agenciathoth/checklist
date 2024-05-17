@@ -1,5 +1,8 @@
 "use client";
 
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
+import Image from "next/image";
 import { Pill } from "@/components/Pill";
 import { cn } from "@/utils/cn";
 import { TaskResponsible, Tasks, UserRole } from "@prisma/client";
@@ -21,6 +24,11 @@ import { api } from "@/lib/api";
 import { toast } from "react-toastify";
 
 type TasksListProps = Pick<Exclude<CustomerWithTasks, null>, "tasks">;
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { getMediaURL } from "@/lib/aws";
 
 export function TasksList({ tasks: _tasks }: TasksListProps) {
   const session = useSession();
@@ -313,13 +321,53 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
               {task.title}
             </h2>
 
-            <p
-              className={cn("text-sm", {
-                "line-through": isChecked,
-              })}
-            >
+            <p className={cn("text-sm", { "line-through": isChecked })}>
               {task.description}
             </p>
+
+            {task.medias.length > 0 ? (
+              <>
+                <Swiper
+                  autoHeight
+                  modules={[Pagination]}
+                  className="w-full"
+                  slidesPerView={1}
+                  pagination={{
+                    el: `.swiperPagination-${task.id}`,
+                    clickable: true,
+                    bulletClass:
+                      "block w-2 h-2 rounded-full bg-black/25 cursor-pointer",
+                    bulletActiveClass: "!bg-secondary",
+                  }}
+                >
+                  {task.medias.map((media) => (
+                    <SwiperSlide key={media.id}>
+                      {media.type.startsWith("video") ? (
+                        <video
+                          className="max-w-full object-cover mx-auto select-none"
+                          controls
+                        >
+                          <source src={getMediaURL(media.path)} />
+                        </video>
+                      ) : (
+                        <img
+                          className="max-w-full object-cover mx-auto select-none"
+                          src={getMediaURL(media.path)}
+                          alt=""
+                        />
+                      )}
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+
+                <div
+                  className={cn(
+                    `swiperPagination-${task.id}`,
+                    "flex gap-2 justify-center mt-4"
+                  )}
+                ></div>
+              </>
+            ) : null}
           </li>
         );
       })}

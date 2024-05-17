@@ -1,10 +1,15 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
 import { createTaskSchema } from "@/validators/task";
+import { Prisma, TaskResponsible } from "@prisma/client";
 import { parseISO } from "date-fns";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { randomBytes } from "node:crypto";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { s3 } from "@/lib/aws";
+import { uploadFile } from "@/utils/uploadFile";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(nextAuthOptions);
@@ -13,19 +18,36 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { title, description, due, responsible, customerId } =
-      await createTaskSchema.parseAsync(body);
+    const body = await request.formData();
+
+    const parsedMedias: Prisma.MediasCreateWithoutTaskInput[] =
+      await Promise.all(
+        (body.getAll("medias") as File[]).map(async (file, index) => {
+          const media = await uploadFile(
+            file,
+            body.get("customerId") as string
+          );
+
+          return {
+            ...media,
+            order: index + 1,
+            uploadedBy: {
+              connect: { id: session.user.id },
+            },
+          };
+        })
+      );
 
     const task = await prismaClient.tasks.create({
       data: {
-        title,
-        description,
-        due: parseISO(due),
-        responsible,
+        title: body.get("title") as string,
+        description: body.get("description") as string,
+        due: parseISO(body.get("due") as string),
+        responsible: body.get("responsible") as TaskResponsible,
         customer: {
-          connect: { id: customerId },
+          connect: { id: body.get("customerId") as string },
         },
+        medias: { create: parsedMedias },
         updatedBy: {
           connect: { id: session.user.id },
         },

@@ -1,6 +1,7 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
-import { createTaskSchema } from "@/validators/task";
+import { uploadFile } from "@/utils/uploadFile";
+import { Prisma, TaskResponsible } from "@prisma/client";
 import { parseISO } from "date-fns";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,11 +14,9 @@ export async function PUT(request: NextRequest, { params }: any) {
   }
 
   try {
-    const body = await request.json();
-    const { id, title, description, due, responsible, customerId } =
-      await createTaskSchema
-        .extend({ id: z.string().min(1) })
-        .parseAsync({ ...params, ...body });
+    const body = await request.formData();
+
+    const { id } = await z.object({ id: z.string().min(1) }).parseAsync(params);
 
     const task = await prismaClient.tasks.findUnique({
       where: { id },
@@ -28,13 +27,48 @@ export async function PUT(request: NextRequest, { params }: any) {
       });
     }
 
+    const newMedias = (body.getAll("medias") as File[]).map((file, index) => ({
+      order: Number(body.getAll("mediasOrder")[index]),
+      file,
+    }));
+
+    if (newMedias.length > 0) {
+      const insertedMedias = await Promise.all(
+        newMedias.map(async ({ file, order }) => {
+          const media = await uploadFile(
+            file,
+            body.get("customerId") as string
+          );
+
+          const insertedMedia: Prisma.MediasCreateInput = {
+            ...media,
+            order,
+            task: {
+              connect: { id },
+            },
+            uploadedBy: {
+              connect: { id: session.user.id },
+            },
+          };
+
+          return insertedMedia;
+        })
+      );
+
+      await Promise.all(
+        insertedMedias.map((insertedMedia) =>
+          prismaClient.medias.create({ data: insertedMedia })
+        )
+      );
+    }
+
     await prismaClient.tasks.update({
       where: { id },
       data: {
-        title,
-        description,
-        due: parseISO(due),
-        responsible,
+        title: body.get("title") as string,
+        description: body.get("description") as string,
+        due: parseISO(body.get("due") as string),
+        responsible: body.get("responsible") as TaskResponsible,
         updatedBy: {
           connect: { id: session.user.id },
         },
