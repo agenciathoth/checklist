@@ -117,6 +117,10 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
           deletedMedias.map(({ id }) => api.delete(`media/${id}`))
         );
 
+        if (deletedMedias.length) {
+          await api.put(`tasks/${selectedTask.id}/media/reorder`);
+        }
+
         const updatedMedias = medias.filter(({ id, order }) => {
           const selectedMedia = selectedTask.medias.find(
             ({ id: mediaId }) => mediaId === id

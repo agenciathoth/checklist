@@ -65,23 +65,6 @@ export async function DELETE(request: NextRequest, { params }: any) {
       where: { id },
     });
 
-    const remainingMedias = await prismaClient.medias.findMany({
-      where: {
-        taskId: media.taskId,
-      },
-      orderBy: {
-        order: "asc",
-      },
-    });
-    await Promise.all(
-      remainingMedias.map((media, index) =>
-        prismaClient.medias.update({
-          where: { id: media.id },
-          data: { order: index + 1 },
-        })
-      )
-    );
-
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ZodError) {
