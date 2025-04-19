@@ -102,9 +102,9 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
   };
 
   const editTask = (id: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
     params.set("id", id);
-    router.replace(pathname.concat("?").concat(params.toString()));
+    router.replace(`${pathname}?${params.toString()}`);
   };
 
   const toggleArchiveTask = async (id: string, isArchived: boolean) => {
@@ -177,7 +177,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
   };
 
   return (
-    <ul className="flex flex-col gap-6 p-6 bg-white rounded-xl drop-shadow-custom">
+    <ul className="flex flex-col gap-6  ">
       {tasks.map((task) => {
         const isArchived = task.archivedAt !== null;
         const isChecked = task.completedAt !== null;
@@ -189,7 +189,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
           <li
             key={task.id}
             className={cn(
-              "flex flex-col gap-3 pb-5 border-b-2 border-border last:pb-0 last:border-none",
+              "flex flex-col gap-3 p-6 bg-white rounded-2xl drop-shadow-custom",
               {
                 "opacity-50": isArchived,
                 "opacity-80": isChecked,
@@ -313,17 +313,9 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
               </div>
             </div>
 
-            <h2
-              className={cn("font-bold text-xl", {
-                "line-through": isChecked,
-              })}
-            >
-              {task.title}
-            </h2>
+            <h2 className={cn("font-bold text-xl")}>{task.title}</h2>
 
-            <p className={cn("text-sm", { "line-through": isChecked })}>
-              {task.description}
-            </p>
+            <p className={cn("text-sm")}>{task.description}</p>
 
             {task.medias.length > 0 ? (
               <>

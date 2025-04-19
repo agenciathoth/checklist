@@ -7,7 +7,7 @@ async function main() {
   const plainPassword = "Checklist@Neto";
   const encryptedPassword = await hash(plainPassword, 8);
 
-  await prisma.users.upsert({
+  const user = await prisma.users.upsert({
     where: { email: "vilsonsampaiodev@gmail.com" },
     update: {
       password: encryptedPassword,
@@ -18,6 +18,14 @@ async function main() {
       email: "vilsonsampaiodev@gmail.com",
       password: encryptedPassword,
       role: UserRole.ADMIN,
+    },
+  });
+
+  await prisma.customers.create({
+    data: {
+      name: "Teste",
+      slug: "teste",
+      updatedBy: { connect: { id: user.id } },
     },
   });
 }
