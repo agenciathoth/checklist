@@ -1,13 +1,14 @@
+import { cn } from "@/utils/cn";
 import { IconContext } from "@phosphor-icons/react";
 import { ComponentProps, forwardRef } from "react";
 
 interface TextAreaProps extends ComponentProps<"textarea"> {
-  icon: JSX.Element;
+  icon?: JSX.Element;
   error?: string;
 }
 
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  function Component({ icon, error, ...props }, ref) {
+  function Component({ icon, error, className, ...props }, ref) {
     return (
       <div className="flex flex-col w-full">
         <div
@@ -15,18 +16,23 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             error ? "border border-red-400" : ""
           }`}
         >
-          <IconContext.Provider
-            value={{
-              size: 18,
-              weight: "bold",
-            }}
-          >
-            <span className="flex-shrink-0 flex pt-4 pl-4">{icon}</span>
-          </IconContext.Provider>
+          {icon && (
+            <IconContext.Provider
+              value={{
+                size: 18,
+                weight: "bold",
+              }}
+            >
+              <span className="flex-shrink-0 flex pt-4 pl-4">{icon}</span>
+            </IconContext.Provider>
+          )}
 
           <textarea
             ref={ref}
-            className="flex-1 w-full min-h-[100px] block p-4 bg-transparent text-text outline-none placeholder:text-shape-text"
+            className={cn(
+              "flex-1 w-full min-h-[100px] block p-4 bg-transparent text-text outline-none placeholder:text-shape-text",
+              className
+            )}
             {...props}
           />
         </div>

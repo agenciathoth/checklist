@@ -17,6 +17,12 @@ const config: Config = {
       dropShadow: {
         custom: "0px 2px 24px rgba(0, 0, 0, 0.13)",
       },
+      screens: {
+        md: "600px",
+      },
+      maxHeight: {
+        "calc-vh": "calc(100vh - 80px)",
+      },
     },
   },
   plugins: [],

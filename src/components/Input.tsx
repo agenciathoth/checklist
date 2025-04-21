@@ -2,7 +2,7 @@ import { IconContext } from "@phosphor-icons/react";
 import { ComponentProps, forwardRef } from "react";
 
 interface InputProps extends ComponentProps<"input"> {
-  icon: JSX.Element;
+  icon?: JSX.Element;
   error?: string;
 }
 
@@ -15,19 +15,21 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             error ? "border border-red-400" : ""
           }`}
         >
-          <IconContext.Provider
-            value={{
-              size: 18,
-              weight: "bold",
-            }}
-          >
-            <span className="flex-shrink-0 flex pl-4">{icon}</span>
-          </IconContext.Provider>
+          {icon && (
+            <IconContext.Provider
+              value={{
+                size: 18,
+                weight: "bold",
+              }}
+            >
+              <span className="flex-shrink-0 flex pl-4">{icon}</span>
+            </IconContext.Provider>
+          )}
 
           <input
             ref={ref}
             type={type}
-            className="flex-1  w-full block p-4 bg-transparent text-text outline-none placeholder:text-shape-text"
+            className="flex-1  w-full block p-4 bg-transparent text-text outline-none placeholder:text-shape-text disabled:cursor-not-allowed disabled:opacity-70"
             {...props}
           />
         </div>

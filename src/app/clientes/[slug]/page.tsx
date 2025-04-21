@@ -32,6 +32,11 @@ const getCustomerWithTasks = async (slug: string, isLogged?: boolean) => {
         },
       },
       updatedBy: true,
+      _count: {
+        select: {
+          comments: true,
+        },
+      },
     },
     orderBy: {
       due: "asc",
@@ -90,8 +95,6 @@ export default async function Customer({ params }: any) {
       {!!customer.tasks.length && <TasksList tasks={customer.tasks} />}
 
       <div className="h-16" />
-
-      <BottomNav {...customer} />
     </>
   );
 }
