@@ -134,14 +134,12 @@ const CommentItem = ({
               className="text-secondary ml-auto"
             >
               <Pencil size={16} weight="bold" />
-              Editar
             </ActionButton>
             <ActionButton
               onClick={() => onDeleteClick(id)}
               className="text-tertiary"
             >
               <TrashSimple size={16} weight="bold" />
-              Remover
             </ActionButton>
           </>
         ) : null}

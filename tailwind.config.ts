@@ -21,7 +21,7 @@ const config: Config = {
         md: "600px",
       },
       maxHeight: {
-        "calc-vh": "calc(100vh - 80px)",
+        "calc-vh": "calc(100dvh - 80px)",
       },
     },
   },
