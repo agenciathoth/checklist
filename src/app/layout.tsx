@@ -8,6 +8,8 @@ import { Providers } from "./providers";
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 
+import { Analytics } from "@vercel/analytics/next";
+
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
@@ -30,6 +32,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <Analytics />
+
       <body className={poppins.className}>
         <Providers>
           <ToastContainer />
