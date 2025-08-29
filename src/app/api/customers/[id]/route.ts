@@ -1,9 +1,6 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
 import { createCustomerSchema } from "@/validators/customer";
-import { createUserSchema, editUserSchema } from "@/validators/user";
-import { UserRole } from "@prisma/client";
-import { hash } from "bcrypt";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import slugify from "slugify";
@@ -32,19 +29,33 @@ export async function PUT(request: NextRequest, { params }: any) {
       });
     }
 
-    let slug = slugify(name.toLowerCase());
+    let slug = customer.slug;
 
-    const slugAlreadyExists = await prismaClient.customers.findFirst({
-      where: {
-        slug: { startsWith: slug },
-      },
-      orderBy: { slug: "desc" },
-    });
+    const isNameChanged = name !== customer.name;
+    if (isNameChanged) {
+      slug = slugify(name.toLowerCase());
 
-    if (slugAlreadyExists) {
-      const slugIndex = Number(slugAlreadyExists.slug.split("-").pop()) ?? 0;
+      const slugAlreadyExists = await prismaClient.customers.findFirst({
+        where: {
+          slug: { startsWith: slug },
+        },
+        orderBy: { slug: "desc" },
+      });
 
-      slug += "-".concat(String(slugIndex + 1));
+      if (slugAlreadyExists) {
+        let slugIndex = 0;
+
+        const lastPart = slugAlreadyExists.slug.split("-").pop() || "";
+        const lastPartIsNumber = /^\d+$/.test(lastPart);
+
+        if (lastPartIsNumber) {
+          slugIndex = Number(lastPart) + 1;
+        } else {
+          slugIndex = 1;
+        }
+
+        slug += `-${slugIndex + 1}`;
+      }
     }
 
     await prismaClient.customers.update({

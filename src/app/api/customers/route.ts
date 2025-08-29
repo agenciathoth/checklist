@@ -27,9 +27,18 @@ export async function POST(request: NextRequest) {
     });
 
     if (slugAlreadyExists) {
-      const slugIndex = Number(slugAlreadyExists.slug.split("-").pop()) ?? 0;
+      let slugIndex = 0;
 
-      slug += "-".concat(String(slugIndex + 1));
+      const lastPart = slugAlreadyExists.slug.split("-").pop() || "";
+      const lastPartIsNumber = /^\d+$/.test(lastPart);
+
+      if (lastPartIsNumber) {
+        slugIndex = Number(lastPart) + 1;
+      } else {
+        slugIndex = 1;
+      }
+
+      slug += `-${slugIndex + 1}`;
     }
 
     const customer = await prismaClient.customers.create({
