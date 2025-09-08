@@ -1,15 +1,11 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
-import { createTaskSchema } from "@/validators/task";
-import { Prisma, TaskResponsible } from "@prisma/client";
+import { CreateTaskSchema, createTaskSchema } from "@/validators/task";
+import { Prisma } from "@prisma/client";
 import { parseISO } from "date-fns";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { randomBytes } from "node:crypto";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { s3 } from "@/lib/aws";
-import { uploadFile } from "@/utils/uploadFile";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(nextAuthOptions);
@@ -18,36 +14,33 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.formData();
+    const body = await request.json();
+    const { title, description, due, responsible, customerId, medias } =
+      await createTaskSchema.parse(body);
 
-    const parsedMedias: Prisma.MediasCreateWithoutTaskInput[] =
-      await Promise.all(
-        (body.getAll("medias") as File[]).map(async (file, index) => {
-          const media = await uploadFile(
-            file,
-            body.get("customerId") as string
-          );
-
-          return {
-            ...media,
-            order: index + 1,
-            uploadedBy: {
-              connect: { id: session.user.id },
-            },
-          };
-        })
-      );
+    const parsedMedias: Prisma.MediasCreateWithoutTaskInput[] = medias.map(
+      ({ order, path, type }) => ({
+        order,
+        path,
+        type,
+        uploadedBy: {
+          connect: { id: session.user.id },
+        },
+      })
+    );
 
     const task = await prismaClient.tasks.create({
       data: {
-        title: body.get("title") as string,
-        description: body.get("description") as string,
-        due: parseISO(body.get("due") as string),
-        responsible: body.get("responsible") as TaskResponsible,
+        title,
+        description,
+        due: parseISO(due),
+        responsible,
         customer: {
-          connect: { id: body.get("customerId") as string },
+          connect: { id: customerId },
         },
-        medias: { create: parsedMedias },
+        medias: {
+          create: parsedMedias,
+        },
         updatedBy: {
           connect: { id: session.user.id },
         },

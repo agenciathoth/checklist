@@ -1,6 +1,7 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
 import { uploadFile } from "@/utils/uploadFile";
+import { createTaskSchema } from "@/validators/task";
 import { Prisma, TaskResponsible } from "@prisma/client";
 import { parseISO } from "date-fns";
 import { getServerSession } from "next-auth";
@@ -14,10 +15,11 @@ export async function PUT(request: NextRequest, { params }: any) {
   }
 
   try {
-    const body = await request.formData();
+    const body = await request.json();
+    const { title, description, due, responsible, customerId, medias } =
+      await createTaskSchema.parse(body);
 
     const { id } = await z.object({ id: z.string().min(1) }).parseAsync(params);
-
     const task = await prismaClient.tasks.findUnique({
       where: { id },
     });
@@ -27,48 +29,28 @@ export async function PUT(request: NextRequest, { params }: any) {
       });
     }
 
-    const newMedias = (body.getAll("medias") as File[]).map((file, index) => ({
-      order: Number(body.getAll("mediasOrder")[index]),
-      file,
-    }));
-
-    if (newMedias.length > 0) {
-      const insertedMedias = await Promise.all(
-        newMedias.map(async ({ file, order }) => {
-          const media = await uploadFile(
-            file,
-            body.get("customerId") as string
-          );
-
-          const insertedMedia: Prisma.MediasCreateInput = {
-            ...media,
-            order,
-            task: {
-              connect: { id },
-            },
-            uploadedBy: {
-              connect: { id: session.user.id },
-            },
-          };
-
-          return insertedMedia;
+    if (medias.length > 0) {
+      const parsedMedias: Prisma.MediasCreateManyInput[] = medias.map(
+        ({ order, path, type }) => ({
+          order,
+          path,
+          type,
+          taskId: id,
+          userId: session.user.id,
         })
       );
 
-      await Promise.all(
-        insertedMedias.map((insertedMedia) =>
-          prismaClient.medias.create({ data: insertedMedia })
-        )
-      );
+      const data = await prismaClient.medias.createMany({ data: parsedMedias });
+      console.log({ data });
     }
 
     await prismaClient.tasks.update({
       where: { id },
       data: {
-        title: body.get("title") as string,
-        description: body.get("description") as string,
-        due: parseISO(body.get("due") as string),
-        responsible: body.get("responsible") as TaskResponsible,
+        title,
+        description,
+        due: parseISO(due),
+        responsible: responsible,
         updatedBy: {
           connect: { id: session.user.id },
         },

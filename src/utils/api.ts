@@ -34,3 +34,5 @@ export const getComments = async (taskId: string) => {
 
 export type Comments = Prisma.PromiseReturnType<typeof getComments>;
 export type Comment = Comments[number];
+
+export type TaskType = Awaited<ReturnType<typeof prismaClient.tasks.create>>;
