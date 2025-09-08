@@ -18,7 +18,7 @@ import {
   X,
   Play,
 } from "@phosphor-icons/react";
-import { TaskResponsible } from "@prisma/client";
+import { PrismaClient, TaskResponsible } from "@prisma/client";
 import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -29,13 +29,17 @@ import { subMinutes } from "date-fns";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { getMediaURL } from "@/lib/aws";
 import { cn } from "@/utils/cn";
+import { TaskType } from "@/utils/api";
+import { getPresignedURL } from "@/utils/presignedURL";
 
 interface TaskFormProps
   extends Pick<Exclude<CustomerWithTasks, null>, "tasks"> {
   customerId: string;
 }
 
-type Media = CreateTaskSchema["medias"][0];
+type Media = CreateTaskSchema["medias"][0] & {
+  file?: File;
+};
 
 export function TaskForm({ customerId, tasks }: TaskFormProps) {
   const searchParams = useSearchParams();
@@ -74,8 +78,10 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
 
   useEffect(() => {
     setMedias(
-      selectedTask?.medias.map(({ id, path, order, type }) => ({
+      selectedTask?.medias.map(({ id, order, path, type }) => ({
         id,
+        path,
+        type,
         url: getMediaURL(path),
         order,
         isVideo: type.startsWith("video"),
@@ -88,27 +94,23 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
     reset();
   };
 
-  const handleCreateTask = async ({
-    title,
-    description,
-    due,
-    responsible,
-    customerId,
-  }: CreateTaskSchema) => {
+  const handleCreateTask = async (formData: CreateTaskSchema) => {
     try {
       const newMedias = medias.filter(({ file }) => Boolean(file));
 
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("description", description || "");
-      formData.append("due", due);
-      formData.append("responsible", responsible);
-      newMedias.forEach((media) => {
-        formData.append("medias", media.file);
-        formData.append("mediasOrder", String(media.order));
-      });
-      formData.append("customerId", customerId);
+      const urls = await Promise.all(
+        newMedias.map(async (media) => {
+          const data = await getPresignedURL({
+            fileName: media.file?.name || "",
+            fileType: media.file?.type.split("/")[0] || "",
+            customerId,
+          });
 
+          return { ...media, ...data };
+        })
+      );
+
+      let response: TaskType;
       if (isEditing && selectedTask) {
         const deletedMedias = selectedTask.medias.filter(
           ({ id }) => !medias.map(({ id }) => id).includes(id)
@@ -134,10 +136,27 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
           )
         );
 
-        await api.put(`tasks/${selectedTask.id}`, formData);
+        const { data } = await api.put<TaskType>(`tasks/${selectedTask.id}`, {
+          ...formData,
+          medias: urls,
+        });
+        response = data;
       } else {
-        await api.post("tasks", formData);
+        const { data } = await api.post("tasks", { ...formData, medias: urls });
+        response = data;
       }
+
+      await Promise.all(
+        urls.map(async ({ url, file, type }) => {
+          await fetch(url, {
+            method: "PUT",
+            body: file,
+            headers: {
+              "Content-Type": type,
+            },
+          });
+        })
+      );
 
       toast.success(
         !isEditing
@@ -182,6 +201,8 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
     setMedias((prevState) => {
       const uploadedMedias: Media[] = filteredFiles.map((file, index) => ({
         file,
+        path: "",
+        type: file.type,
         url: URL.createObjectURL(file),
         order: prevState.length + index + 1,
         isVideo: file.type.startsWith("video"),

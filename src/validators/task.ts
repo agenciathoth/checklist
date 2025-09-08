@@ -16,9 +16,10 @@ export const createTaskSchema = z.object({
   medias: z.array(
     z.object({
       id: z.string().cuid().optional(),
-      file: z.any().optional(),
-      url: z.string().url(),
       order: z.number().min(1),
+      path: z.string(),
+      type: z.string(),
+      url: z.string().url(),
       isVideo: z.boolean().optional(),
     })
   ),

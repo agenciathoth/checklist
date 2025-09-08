@@ -363,19 +363,19 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                         bulletActiveClass: "!bg-secondary",
                       }}
                     >
-                      {task.medias.map((media) => (
-                        <SwiperSlide key={media.id}>
-                          {media.type.startsWith("video") ? (
+                      {task.medias.map(({ id, type, path }) => (
+                        <SwiperSlide key={id}>
+                          {type.startsWith("video") ? (
                             <video
                               className="max-w-full object-cover mx-auto select-none"
                               controls
                             >
-                              <source src={getMediaURL(media.path)} />
+                              <source src={getMediaURL(path)} />
                             </video>
                           ) : (
                             <img
                               className="max-w-full object-cover mx-auto select-none"
-                              src={getMediaURL(media.path)}
+                              src={getMediaURL(path)}
                               alt=""
                             />
                           )}
