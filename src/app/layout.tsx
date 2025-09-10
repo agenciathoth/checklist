@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Checklist Thoth",
+  title: "Planner Thoth",
 };
 
 export default function RootLayout({

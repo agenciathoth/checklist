@@ -77,7 +77,7 @@ export default async function Customer({ params }: any) {
 
     return (
       <>
-        <TitlePage>Checklist | Cliente não encontrado</TitlePage>
+        <TitlePage>Planner | Cliente não encontrado</TitlePage>
       </>
     );
   }
@@ -86,7 +86,7 @@ export default async function Customer({ params }: any) {
     <>
       {session ? <TopNav /> : null}
 
-      <TitlePage>Checklist | {customer.name}</TitlePage>
+      <TitlePage>Planner | {customer.name}</TitlePage>
 
       <CustomerPresentation presentation={customer.presentation || ""} />
       {session ? (

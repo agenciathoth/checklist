@@ -14,7 +14,7 @@ export default async function CustomerLoading() {
     <>
       {session ? <TopNav /> : null}
 
-      <TitlePage>Checklist | Carregando...</TitlePage>
+      <TitlePage>Planner | Carregando...</TitlePage>
 
       <CustomerPresentation presentation={""} />
       {session ? <TaskForm customerId={""} tasks={[]} /> : null}
