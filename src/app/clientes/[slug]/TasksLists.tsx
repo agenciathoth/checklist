@@ -1,6 +1,6 @@
 "use client";
 
-import { Swiper, SwiperSlide } from "swiper/react";
+import { Swiper, SwiperSlide, SwiperRef, SwiperClass } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import Image from "next/image";
 import { Pill } from "@/components/Pill";
@@ -19,7 +19,7 @@ import {
   SpinnerGap,
   Trash,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "react-toastify";
@@ -37,6 +37,10 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
   const session = useSession();
 
   const [tasks, setTasks] = useState(_tasks);
+
+  const [swiperInstance, setSwiperInstance] = useState<SwiperClass | null>(
+    null
+  );
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -351,6 +355,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                 {task.medias.length > 0 ? (
                   <>
                     <Swiper
+                      onSwiper={setSwiperInstance}
                       autoHeight
                       modules={[Pagination]}
                       className="w-full"
@@ -362,13 +367,22 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                           "block w-2 h-2 rounded-full bg-black/25 cursor-pointer",
                         bulletActiveClass: "!bg-secondary",
                       }}
+                      observer
+                      observeParents
                     >
-                      {task.medias.map(({ id, type, path }) => (
+                      {task.medias.map(({ id, type, path }, index) => (
                         <SwiperSlide key={id}>
                           {type.startsWith("video") ? (
                             <video
                               className="max-w-full object-cover mx-auto select-none"
                               controls
+                              onLoadedMetadata={() => {
+                                if (index > 0) {
+                                  return;
+                                }
+
+                                swiperInstance?.updateAutoHeight();
+                              }}
                             >
                               <source src={getMediaURL(path)} />
                             </video>
