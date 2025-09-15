@@ -376,12 +376,14 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                             <video
                               className="max-w-full object-cover mx-auto select-none"
                               controls
-                              onLoadedMetadata={() => {
+                              onLoadedData={() => {
                                 if (index > 0) {
                                   return;
                                 }
 
-                                swiperInstance?.updateAutoHeight();
+                                setTimeout(() => {
+                                  swiperInstance?.updateAutoHeight();
+                                }, 1000);
                               }}
                             >
                               <source src={getMediaURL(path)} />
