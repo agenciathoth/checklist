@@ -203,154 +203,158 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
             <li
               key={task.id}
               className={cn(
-                "relative p-6 bg-white rounded-2xl drop-shadow-custom"
+                "relative bg-white rounded-2xl drop-shadow-custom overflow-hidden"
               )}
               style={{ wordWrap: "break-word" }}
             >
               <div
-                className={cn("flex flex-col gap-3", {
+                className={cn("flex flex-col", {
                   "opacity-50": isArchived,
                   "opacity-80": isChecked,
                 })}
               >
-                <div className="flex items-start gap-4 w-full">
-                  <div className="flex-1 flex flex-col gap-2">
-                    <div className="flex gap-2 flex-wrap">
-                      {isArchived ? <Pill>Arquivada</Pill> : null}
+                <div className="flex flex-col gap-3 p-6">
+                  <div className="flex items-start gap-4 w-full">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        {isArchived ? <Pill>Arquivada</Pill> : null}
 
-                      {session.data?.user.role === UserRole.ADMIN ? (
-                        <Pill>
-                          {(task.updatedAt &&
-                          !isEqual(task.createdAt, task.updatedAt)
-                            ? "Última atualização por: "
-                            : "Criado por: "
-                          ).concat(task.updatedBy.name)}
+                        {session.data?.user.role === UserRole.ADMIN ? (
+                          <Pill>
+                            {(task.updatedAt &&
+                            !isEqual(task.createdAt, task.updatedAt)
+                              ? "Última atualização por: "
+                              : "Criado por: "
+                            ).concat(task.updatedBy.name)}
+                          </Pill>
+                        ) : null}
+                      </div>
+
+                      <div className="flex gap-2 flex-wrap">
+                        {isLate ? (
+                          <Pill variant="tertiary">Atrasada</Pill>
+                        ) : null}
+
+                        <Pill variant={variantByResponsible}>
+                          Prazo:{" "}
+                          {format(task.due, "dd 'de' MMM, HH:mm", {
+                            locale: ptBR,
+                          })}
                         </Pill>
+
+                        <Pill variant={variantByResponsible}>
+                          {task.responsible === TaskResponsible.AGENCY
+                            ? "Thoth"
+                            : "Cliente"}
+                        </Pill>
+                      </div>
+                    </div>
+
+                    <div className="flex-shrink-0 flex gap-4">
+                      {!session || !isArchived ? (
+                        <>
+                          <button
+                            type="button"
+                            className={cn(
+                              "flex items-center justify-center w-7 h-7 rounded-full disabled:cursor-not-allowed",
+                              {
+                                "bg-border text-text": !isChecked,
+                                "bg-green-600 text-white": isChecked,
+                              }
+                            )}
+                            title={
+                              isChecked
+                                ? "Remover aprovação"
+                                : "Marcar como aprovada"
+                            }
+                            disabled={
+                              (selectedTask === task && isChecking) ||
+                              (!session.data &&
+                                task.responsible === TaskResponsible.AGENCY)
+                            }
+                            onClick={() => toggleCheckTask(task)}
+                          >
+                            {selectedTask === task && isChecking ? (
+                              <SpinnerGap
+                                size={16}
+                                weight="bold"
+                                className="animate-spin"
+                              />
+                            ) : isChecked ? (
+                              <Check size={16} weight="bold" />
+                            ) : null}
+                          </button>
+
+                          <button
+                            type="button"
+                            className={cn(
+                              "relative flex items-center justify-center w-7 h-7  text-primary rounded-full disabled:cursor-not-allowed"
+                            )}
+                            title={
+                              isChecked
+                                ? "Marcar como pendente"
+                                : "Marcar como finalizada"
+                            }
+                            onClick={() => openComments(task)}
+                          >
+                            <span className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-white font-semibold text-xs leading-[1]">
+                              {task._count.comments > 9
+                                ? "9+"
+                                : task._count.comments}
+                            </span>
+                            <ChatCircle size={28} weight="fill" />
+                          </button>
+                        </>
+                      ) : null}
+
+                      {session.data ? (
+                        !isArchived ? (
+                          <>
+                            <button
+                              type="button"
+                              className="flex items-center justify-center w-7 h-7 bg-secondary text-white rounded-full"
+                              onClick={() => editTask(task.id)}
+                            >
+                              <Pencil size={16} weight="bold" />
+                            </button>
+
+                            <button
+                              type="button"
+                              title="Arquivar"
+                              className="flex items-center justify-center w-7 h-7 bg-shape-text text-text rounded-full"
+                              onClick={() => toggleArchiveTask(task.id, false)}
+                            >
+                              <ArchiveBox size={16} weight="bold" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              title="Restaurar"
+                              className="flex items-center justify-center w-7 h-7 bg-shape-text text-text rounded-full"
+                              onClick={() => toggleArchiveTask(task.id, true)}
+                            >
+                              <ClockClockwise size={16} weight="bold" />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="flex items-center justify-center w-7 h-7 bg-tertiary text-white rounded-full"
+                              onClick={() => deleteCustomer(task.id)}
+                            >
+                              <Trash size={16} weight="bold" />
+                            </button>
+                          </>
+                        )
                       ) : null}
                     </div>
-
-                    <div className="flex gap-2 flex-wrap">
-                      {isLate ? <Pill variant="tertiary">Atrasada</Pill> : null}
-
-                      <Pill variant={variantByResponsible}>
-                        Prazo:{" "}
-                        {format(task.due, "dd 'de' MMM, HH:mm", {
-                          locale: ptBR,
-                        })}
-                      </Pill>
-
-                      <Pill variant={variantByResponsible}>
-                        {task.responsible === TaskResponsible.AGENCY
-                          ? "Thoth"
-                          : "Cliente"}
-                      </Pill>
-                    </div>
                   </div>
 
-                  <div className="flex-shrink-0 flex gap-4">
-                    {!session || !isArchived ? (
-                      <>
-                        <button
-                          type="button"
-                          className={cn(
-                            "flex items-center justify-center w-7 h-7 rounded-full disabled:cursor-not-allowed",
-                            {
-                              "bg-border text-text": !isChecked,
-                              "bg-green-600 text-white": isChecked,
-                            }
-                          )}
-                          title={
-                            isChecked
-                              ? "Remover aprovação"
-                              : "Marcar como aprovada"
-                          }
-                          disabled={
-                            (selectedTask === task && isChecking) ||
-                            (!session.data &&
-                              task.responsible === TaskResponsible.AGENCY)
-                          }
-                          onClick={() => toggleCheckTask(task)}
-                        >
-                          {selectedTask === task && isChecking ? (
-                            <SpinnerGap
-                              size={16}
-                              weight="bold"
-                              className="animate-spin"
-                            />
-                          ) : isChecked ? (
-                            <Check size={16} weight="bold" />
-                          ) : null}
-                        </button>
+                  <h2 className={cn("font-bold text-xl")}>{task.title}</h2>
 
-                        <button
-                          type="button"
-                          className={cn(
-                            "relative flex items-center justify-center w-7 h-7  text-primary rounded-full disabled:cursor-not-allowed"
-                          )}
-                          title={
-                            isChecked
-                              ? "Marcar como pendente"
-                              : "Marcar como finalizada"
-                          }
-                          onClick={() => openComments(task)}
-                        >
-                          <span className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-white font-semibold text-xs leading-[1]">
-                            {task._count.comments > 9
-                              ? "9+"
-                              : task._count.comments}
-                          </span>
-                          <ChatCircle size={28} weight="fill" />
-                        </button>
-                      </>
-                    ) : null}
-
-                    {session.data ? (
-                      !isArchived ? (
-                        <>
-                          <button
-                            type="button"
-                            className="flex items-center justify-center w-7 h-7 bg-secondary text-white rounded-full"
-                            onClick={() => editTask(task.id)}
-                          >
-                            <Pencil size={16} weight="bold" />
-                          </button>
-
-                          <button
-                            type="button"
-                            title="Arquivar"
-                            className="flex items-center justify-center w-7 h-7 bg-shape-text text-text rounded-full"
-                            onClick={() => toggleArchiveTask(task.id, false)}
-                          >
-                            <ArchiveBox size={16} weight="bold" />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            title="Restaurar"
-                            className="flex items-center justify-center w-7 h-7 bg-shape-text text-text rounded-full"
-                            onClick={() => toggleArchiveTask(task.id, true)}
-                          >
-                            <ClockClockwise size={16} weight="bold" />
-                          </button>
-
-                          <button
-                            type="button"
-                            className="flex items-center justify-center w-7 h-7 bg-tertiary text-white rounded-full"
-                            onClick={() => deleteCustomer(task.id)}
-                          >
-                            <Trash size={16} weight="bold" />
-                          </button>
-                        </>
-                      )
-                    ) : null}
-                  </div>
+                  <p className={cn("text-sm")}>{task.description}</p>
                 </div>
-
-                <h2 className={cn("font-bold text-xl")}>{task.title}</h2>
-
-                <p className={cn("text-sm")}>{task.description}</p>
 
                 {task.medias.length > 0 ? (
                   <>
@@ -402,7 +406,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                     <div
                       className={cn(
                         `swiperPagination-${task.id}`,
-                        "flex gap-2 justify-center mt-4"
+                        "flex gap-2 justify-center mt-4 pb-6"
                       )}
                     ></div>
                   </>
