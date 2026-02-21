@@ -16,6 +16,7 @@ import {
   User,
   Plus,
   X,
+  ArrowsOutSimple,
   Play,
 } from "@phosphor-icons/react";
 import { PrismaClient, TaskResponsible } from "@prisma/client";
@@ -32,8 +33,10 @@ import { cn } from "@/utils/cn";
 import { TaskType } from "@/utils/api";
 import { getPresignedURL } from "@/utils/presignedURL";
 
-interface TaskFormProps
-  extends Pick<Exclude<CustomerWithTasks, null>, "tasks"> {
+interface TaskFormProps extends Pick<
+  Exclude<CustomerWithTasks, null>,
+  "tasks"
+> {
   customerId: string;
 }
 
@@ -65,6 +68,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
             .toISOString()
             .slice(0, 16)
         : "",
+      ratio: selectedTask?.ratio || "",
       responsible: selectedTask?.responsible || TaskResponsible.CUSTOMER,
       medias: [],
       customerId,
@@ -85,7 +89,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
         url: getMediaURL(path),
         order,
         isVideo: type.startsWith("video"),
-      })) || []
+      })) || [],
     );
   }, [selectedTask?.medias]);
 
@@ -107,16 +111,16 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
           });
 
           return { ...media, ...data };
-        })
+        }),
       );
 
       let response: TaskType;
       if (isEditing && selectedTask) {
         const deletedMedias = selectedTask.medias.filter(
-          ({ id }) => !medias.map(({ id }) => id).includes(id)
+          ({ id }) => !medias.map(({ id }) => id).includes(id),
         );
         await Promise.all(
-          deletedMedias.map(({ id }) => api.delete(`media/${id}`))
+          deletedMedias.map(({ id }) => api.delete(`media/${id}`)),
         );
 
         if (deletedMedias.length) {
@@ -125,15 +129,15 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
 
         const updatedMedias = medias.filter(({ id, order }) => {
           const selectedMedia = selectedTask.medias.find(
-            ({ id: mediaId }) => mediaId === id
+            ({ id: mediaId }) => mediaId === id,
           );
 
           return selectedMedia && selectedMedia.order !== order;
         });
         await Promise.all(
           updatedMedias.map(({ id, order }) =>
-            api.put(`media/${id}`, { order })
-          )
+            api.put(`media/${id}`, { order }),
+          ),
         );
 
         const { data } = await api.put<TaskType>(`tasks/${selectedTask.id}`, {
@@ -155,13 +159,13 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
               "Content-Type": type,
             },
           });
-        })
+        }),
       );
 
       toast.success(
         !isEditing
           ? "Tarefa criada com sucesso!"
-          : "Tarefa editada com sucesso!"
+          : "Tarefa editada com sucesso!",
       );
       cancelEditTask();
       window.location.reload();
@@ -179,7 +183,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
           ...media,
           order: index + 1,
         };
-      })
+      }),
     );
   };
 
@@ -189,12 +193,12 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
 
     const files = Array.from(_files);
     const filteredFiles = files.filter(
-      ({ type }) => type.startsWith("image") || type.startsWith("video")
+      ({ type }) => type.startsWith("image") || type.startsWith("video"),
     );
 
     if (filteredFiles.length < files.length) {
       toast.info(
-        "Você não pode enviar arquivos que não sejam de tipo imagem/vídeo"
+        "Você não pode enviar arquivos que não sejam de tipo imagem/vídeo",
       );
     }
 
@@ -219,7 +223,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
         .map((media, index) => ({
           ...media,
           order: index + 1,
-        }))
+        })),
     );
   };
 
@@ -253,6 +257,14 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
           placeholder="Prazo"
           error={errors.due?.message}
           {...register("due")}
+        />
+
+        <Input
+          type="text"
+          icon={<ArrowsOutSimple />}
+          placeholder="Proporção"
+          error={errors.ratio?.message}
+          {...register("ratio")}
         />
 
         <Select
@@ -291,7 +303,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
                       <i
                         className={cn(
                           "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                          "text-white drop-shadow-xl z-10"
+                          "text-white drop-shadow-xl z-10",
                         )}
                       >
                         <Play size={36} weight="fill" />
@@ -359,8 +371,8 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
               ? "Adicionar"
               : "Editar"
             : !isEditing
-            ? "Adicionando..."
-            : "Editando..."}
+              ? "Adicionando..."
+              : "Editando..."}
         </button>
       </div>
     </form>

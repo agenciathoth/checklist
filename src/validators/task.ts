@@ -9,8 +9,14 @@ export const createTaskSchema = z.object({
     .min(1, "O campo é obrigatório")
     .refine(
       (value) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(value),
-      { message: "Insira uma data válida" }
+      { message: "Insira uma data válida" },
     ),
+  ratio: z
+    .string()
+    .regex(/^\d+:\d+$/, {
+      message: "Formato inválido. Use número:número (ex: 16:9)",
+    })
+    .optional(),
   responsible: z.nativeEnum(TaskResponsible),
   customerId: z.string().cuid(),
   medias: z.array(
@@ -21,7 +27,7 @@ export const createTaskSchema = z.object({
       type: z.string(),
       url: z.string().url(),
       isVideo: z.boolean().optional(),
-    })
+    }),
   ),
 });
 

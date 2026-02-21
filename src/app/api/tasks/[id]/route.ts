@@ -16,7 +16,7 @@ export async function PUT(request: NextRequest, { params }: any) {
 
   try {
     const body = await request.json();
-    const { title, description, due, responsible, customerId, medias } =
+    const { title, description, due, responsible, ratio, customerId, medias } =
       await createTaskSchema.parse(body);
 
     const { id } = await z.object({ id: z.string().min(1) }).parseAsync(params);
@@ -37,7 +37,7 @@ export async function PUT(request: NextRequest, { params }: any) {
           type,
           taskId: id,
           userId: session.user.id,
-        })
+        }),
       );
 
       const data = await prismaClient.medias.createMany({ data: parsedMedias });
@@ -50,6 +50,7 @@ export async function PUT(request: NextRequest, { params }: any) {
         title,
         description,
         due: parseISO(due),
+        ratio,
         responsible: responsible,
         updatedBy: {
           connect: { id: session.user.id },
@@ -92,7 +93,7 @@ export async function DELETE(request: NextRequest, { params }: any) {
     if (!customerIsArchived) {
       return new NextResponse(
         "Não é possível remover uma tarefa antes de arquivá-la",
-        { status: 403 }
+        { status: 403 },
       );
     }
 

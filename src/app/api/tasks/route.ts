@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, description, due, responsible, customerId, medias } =
+    const { title, description, due, responsible, customerId, medias, ratio } =
       await createTaskSchema.parse(body);
 
     const parsedMedias: Prisma.MediasCreateWithoutTaskInput[] = medias.map(
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         uploadedBy: {
           connect: { id: session.user.id },
         },
-      })
+      }),
     );
 
     const task = await prismaClient.tasks.create({
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
         title,
         description,
         due: parseISO(due),
+        ratio,
         responsible,
         customer: {
           connect: { id: customerId },

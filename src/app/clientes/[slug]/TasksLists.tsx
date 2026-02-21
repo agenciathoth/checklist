@@ -360,6 +360,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                   <>
                     <Swiper
                       onSwiper={setSwiperInstance}
+                      autoHeight={!task.ratio}
                       modules={[Pagination]}
                       className="w-full"
                       slidesPerView={1}
