@@ -49,6 +49,7 @@ model Tasks {
   description String?
   due         DateTime
   responsible TaskResponsible
+  ratio       String?         
   completedAt DateTime?       @map("completed_at")
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime?       @updatedAt @map("updated_at")
