@@ -39,7 +39,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
   const [tasks, setTasks] = useState(_tasks);
 
   const [swiperInstance, setSwiperInstance] = useState<SwiperClass | null>(
-    null
+    null,
   );
 
   const searchParams = useSearchParams();
@@ -66,8 +66,8 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
             "Atenção!\n\nEssa tarefa é de responsabilidade do cliente.\n".concat(
               !selectedTask.completedAt
                 ? "Você deseja marcá-la como finalizada?"
-                : "Você deseja marcá-la como pendente?"
-            )
+                : "Você deseja marcá-la como pendente?",
+            ),
           )
         : true;
     if (!isConfirmed) return;
@@ -92,14 +92,14 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
       toast.success(
         !selectedTask.completedAt
           ? "Tarefa marcada como finalizada com sucesso!"
-          : "Tarefa marcada como pendente com sucesso!"
+          : "Tarefa marcada como pendente com sucesso!",
       );
     } catch (error) {
       console.error(error);
       toast.error(
         !selectedTask.completedAt
           ? "Não foi possível marcar a tarefa como finalizada"
-          : "Não foi possível marcar a tarefa como pendente"
+          : "Não foi possível marcar a tarefa como pendente",
       );
     } finally {
       setIsChecking(false);
@@ -118,7 +118,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
     const isConfirmed = window.confirm(
       !isArchived
         ? "Você deseja arquivar a tarefa?"
-        : "Você deseja restaurar a tarefa?"
+        : "Você deseja restaurar a tarefa?",
     );
     if (!isConfirmed) return;
 
@@ -203,7 +203,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
             <li
               key={task.id}
               className={cn(
-                "relative bg-white rounded-2xl drop-shadow-custom overflow-hidden"
+                "relative bg-white rounded-2xl drop-shadow-custom overflow-hidden",
               )}
               style={{ wordWrap: "break-word" }}
             >
@@ -260,7 +260,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                               {
                                 "bg-border text-text": !isChecked,
                                 "bg-green-600 text-white": isChecked,
-                              }
+                              },
                             )}
                             title={
                               isChecked
@@ -288,7 +288,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                           <button
                             type="button"
                             className={cn(
-                              "relative flex items-center justify-center w-7 h-7  text-primary rounded-full disabled:cursor-not-allowed"
+                              "relative flex items-center justify-center w-7 h-7  text-primary rounded-full disabled:cursor-not-allowed",
                             )}
                             title={
                               isChecked
@@ -360,7 +360,6 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                   <>
                     <Swiper
                       onSwiper={setSwiperInstance}
-                      autoHeight
                       modules={[Pagination]}
                       className="w-full"
                       slidesPerView={1}
@@ -373,6 +372,11 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                       }}
                       observer
                       observeParents
+                      style={
+                        task.ratio
+                          ? { aspectRatio: task.ratio.replace(":", "/") }
+                          : undefined
+                      }
                     >
                       {task.medias.map(({ id, type, path }, index) => (
                         <SwiperSlide key={id}>
@@ -406,7 +410,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                     <div
                       className={cn(
                         `swiperPagination-${task.id}`,
-                        "flex gap-2 justify-center mt-4 pb-6"
+                        "flex gap-2 justify-center mt-4 pb-6",
                       )}
                     ></div>
                   </>
