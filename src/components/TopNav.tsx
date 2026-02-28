@@ -36,7 +36,7 @@ export function TopNav({
   };
 
   return (
-    <nav className="fixed top-4 left-1/2 flex items-center justify-center w-full max-w-[600px] -translate-x-1/2 z-20">
+    <nav className="fixed top-4 left-1/2 flex items-center justify-center w-full max-w-[800px] -translate-x-1/2 z-20">
       <div className="absolute top-0 left-2 md:left-0">
         {shouldShowBackButton ? (
           <button

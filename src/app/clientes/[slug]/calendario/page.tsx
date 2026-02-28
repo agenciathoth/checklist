@@ -1,16 +1,23 @@
+import Calendar from "@/components/Calendar";
 import { TitlePage } from "@/components/TitlePage";
 import { TopNav } from "@/components/TopNav";
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
-import { Prisma, UserRole } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { endOfMonth, parseISO, startOfMonth } from "date-fns";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { CustomerPresentation } from "./CustomerPresentation";
-import { BottomNav } from "./BottomNav";
-import { TaskForm } from "./TaskForm";
-import { TasksList } from "./TasksLists";
 
-const getCustomerWithTasks = async (slug: string, isLogged?: boolean) => {
+const getMonthTasks = async (
+  slug: string,
+  date?: string,
+  isLogged?: boolean,
+) => {
+  const parsedDate = date ? parseISO(date) : new Date();
+
+  const startDate = startOfMonth(parsedDate);
+  const endDate = endOfMonth(parsedDate);
+
   const customer = await prismaClient.customers.findFirst({
     where: { slug },
   });
@@ -21,6 +28,10 @@ const getCustomerWithTasks = async (slug: string, isLogged?: boolean) => {
 
   const tasks = await prismaClient.tasks.findMany({
     where: {
+      due: {
+        gte: startDate,
+        lte: endDate,
+      },
       ...(!isLogged ? { archivedAt: null } : {}),
       customer: { id: customer.id },
     },
@@ -43,6 +54,12 @@ const getCustomerWithTasks = async (slug: string, isLogged?: boolean) => {
     },
   });
 
+  console.log({
+    startDate,
+    endDate,
+    tasks: tasks.length,
+  });
+
   return {
     ...customer,
     tasks: [...tasks].sort((a, b) => {
@@ -59,18 +76,19 @@ const getCustomerWithTasks = async (slug: string, isLogged?: boolean) => {
   };
 };
 
-export type CustomerWithTasks = Prisma.PromiseReturnType<
-  typeof getCustomerWithTasks
->;
+export type MonthTasks = Prisma.PromiseReturnType<typeof getMonthTasks>;
 
 export const dynamic = "force-dynamic";
 
-export default async function Customer({ params }: any) {
+export default async function CustomerCalendar({ params, searchParams }: any) {
   const { slug } = await params;
+  const { date } = await searchParams;
+
+  console.log(date);
 
   const session = await getServerSession(nextAuthOptions);
 
-  const customer = await getCustomerWithTasks(slug, !!session);
+  const customer = await getMonthTasks(slug, date, !!session);
 
   if (!customer) {
     if (session) {
@@ -79,7 +97,7 @@ export default async function Customer({ params }: any) {
 
     return (
       <>
-        <TitlePage>Planner | Cliente não encontrado</TitlePage>
+        <TitlePage>Calendário | Cliente não encontrado</TitlePage>
       </>
     );
   }
@@ -88,15 +106,9 @@ export default async function Customer({ params }: any) {
     <>
       {session ? <TopNav /> : null}
 
-      <TitlePage>Planner | {customer.name}</TitlePage>
+      <TitlePage>Calendário | {customer.name}</TitlePage>
 
-      <CustomerPresentation presentation={customer.presentation || ""} />
-      {session ? (
-        <TaskForm customerId={customer.id} tasks={customer.tasks} />
-      ) : null}
-      {!!customer.tasks.length && <TasksList tasks={customer.tasks} />}
-
-      <div className="h-16" />
+      <Calendar tasks={customer.tasks} />
     </>
   );
 }
