@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, Info, List, SignOut, X } from "@phosphor-icons/react";
 import { signOut } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
+import { redirect, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface TopNavProps {
@@ -18,11 +18,26 @@ export function TopNav({
   shouldShowBackButton = true,
 }: TopNavProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isMenuOpened, setIsMenuOpened] = useState(false);
 
   const handleMenuClick = () => {
+    const pathSegments = pathname.split("/").filter(Boolean);
+
     if (!isAdmin) {
+      const isCalendarPage = pathSegments.includes("calendario");
+      if (isCalendarPage) {
+        router.push(pathname.replace("/calendario", ""));
+        return;
+      }
+
+      const isTaskPage = pathSegments.includes("tarefas");
+      if (isTaskPage) {
+        router.push(`/${pathSegments[0]}/${pathSegments[1]}`);
+        return;
+      }
+
       router.push("/clientes");
       return;
     }

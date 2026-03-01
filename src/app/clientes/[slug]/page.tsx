@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { TitlePage } from "@/components/TitlePage";
 import { TopNav } from "@/components/TopNav";
 import { nextAuthOptions } from "@/config/auth";
@@ -94,6 +95,14 @@ export default async function Customer({ params }: any) {
       {session ? (
         <TaskForm customerId={customer.id} tasks={customer.tasks} />
       ) : null}
+
+      <Link
+        href={`/clientes/${slug}/calendario`}
+        className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-transparent text-secondary border border-secondary font-medium rounded-full hover:opacity-90 transition-opacity"
+      >
+        Ver calendário
+      </Link>
+
       {!!customer.tasks.length && <TasksList tasks={customer.tasks} />}
 
       <div className="h-16" />

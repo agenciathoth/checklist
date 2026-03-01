@@ -232,7 +232,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
 
                       <div className="flex gap-2 flex-wrap">
                         {isChecked && isLate ? (
-                          <Pill variant="tertiary">Agendado</Pill>
+                          <Pill variant="primary">Agendado</Pill>
                         ) : null}
 
                         <Pill variant={variantByResponsible}>
