@@ -7,19 +7,21 @@ import {
   CaretRight,
   Calendar as CalendarIcon,
   List,
+  Plus,
 } from "@phosphor-icons/react";
 import {
+  addDays,
   addMonths,
-  addWeeks,
   eachDayOfInterval,
+  endOfDay,
   endOfMonth,
   endOfWeek,
   format,
   isSameMonth,
+  isWithinInterval,
   startOfMonth,
   startOfWeek,
   subMonths,
-  subWeeks,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -43,27 +45,14 @@ export default function Calendar({
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.MONTHLY);
 
   const formattedDate = useMemo(() => {
-    if (viewMode === ViewMode.WEEKLY) {
-      const start = startOfWeek(date, { weekStartsOn: 0 });
-      const endDay = new Date(start);
-      endDay.setDate(endDay.getDate() + 6);
-      return `${format(start, "d")} – ${format(endDay, "d MMM yyyy", { locale: ptBR })}`;
-    }
     return format(date, "MMMM yyyy", { locale: ptBR });
-  }, [date, viewMode]);
+  }, [date]);
 
   const calendarDays = useMemo(() => {
-    if (viewMode === ViewMode.WEEKLY) {
-      const start = startOfWeek(date, { weekStartsOn: 0 });
-      return eachDayOfInterval({
-        start,
-        end: addWeeks(start, 1),
-      }).slice(0, 7);
-    }
     const start = startOfWeek(startOfMonth(date), { weekStartsOn: 0 });
     const end = endOfWeek(endOfMonth(date), { weekStartsOn: 0 });
     return eachDayOfInterval({ start, end });
-  }, [date, viewMode]);
+  }, [date]);
 
   const weeks = useMemo(() => {
     const days = [...calendarDays];
@@ -88,6 +77,31 @@ export default function Calendar({
   const getTasksForDay = (day: Date) =>
     tasksByDay.get(format(day, "yyyy-MM-dd")) ?? [];
 
+  const weekCards = useMemo(() => {
+    const monthStart = startOfMonth(date);
+    const monthEnd = endOfMonth(date);
+    const ranges: { start: Date; end: Date }[] = [];
+    let weekStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+    while (weekStart <= monthEnd) {
+      const weekEnd = addDays(weekStart, 6);
+      if (weekEnd >= monthStart) {
+        ranges.push({ start: weekStart, end: weekEnd });
+      }
+      weekStart = addDays(weekStart, 7);
+    }
+    return ranges;
+  }, [date]);
+
+  const getTasksForWeekRange = (range: { start: Date; end: Date }) => {
+    return tasks.filter((task) => {
+      const d = new Date(task.due);
+      return isWithinInterval(d, {
+        start: range.start,
+        end: endOfDay(range.end),
+      });
+    });
+  };
+
   return (
     <>
       <div className="flex items-center justify-between">
@@ -95,13 +109,7 @@ export default function Calendar({
           <button
             type="button"
             className="flex items-center justify-center p-3 bg-slate-100 text-black rounded-full hover:bg-slate-200 transition-colors"
-            onClick={() =>
-              setDate(
-                viewMode === ViewMode.WEEKLY
-                  ? subWeeks(date, 1)
-                  : subMonths(date, 1),
-              )
-            }
+            onClick={() => setDate(subMonths(date, 1))}
           >
             <CaretLeft size={16} weight="bold" />
           </button>
@@ -113,13 +121,7 @@ export default function Calendar({
           <button
             type="button"
             className="flex items-center justify-center p-3 bg-slate-100 text-black rounded-full hover:bg-slate-200 transition-colors"
-            onClick={() =>
-              setDate(
-                viewMode === ViewMode.WEEKLY
-                  ? addWeeks(date, 1)
-                  : addMonths(date, 1),
-              )
-            }
+            onClick={() => setDate(addMonths(date, 1))}
           >
             <CaretRight size={16} weight="bold" />
           </button>
@@ -154,48 +156,119 @@ export default function Calendar({
       </div>
 
       <div className="mt-4">
-        <div className="grid grid-cols-7 gap-px rounded-xl border border-border bg-border">
-          {WEEKDAYS.map((day) => (
-            <div
-              key={day}
-              className="bg-shape py-2 text-center text-xs font-semibold text-slate-600"
-            >
-              {day}
-            </div>
-          ))}
-          {weeks.flatMap((week) =>
-            week.map((day) => {
-              const dayTasks = getTasksForDay(day);
-              const isCurrentMonth = isSameMonth(day, date);
+        {viewMode === ViewMode.WEEKLY ? (
+          <div className="flex flex-col gap-4">
+            {weekCards.map((range, index) => {
+              const weekTasks = getTasksForWeekRange(range);
               return (
-                <div
-                  key={day.toISOString()}
-                  className="min-h-[100px] bg-white p-2"
+                <article
+                  key={`${range.start.toISOString()}-${range.end.toISOString()}`}
+                  className="flex flex-col rounded-xl border border-border bg-white p-4 shadow-sm"
                 >
-                  <span
-                    className={`text-sm ${isCurrentMonth ? "text-slate-800" : "text-slate-300"}`}
-                  >
-                    {format(day, "d")}
-                  </span>
-                  <div className="mt-1 flex flex-col gap-1">
-                    {dayTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className={`rounded-lg px-2 py-1.5 text-left text-xs ${
-                          task.completedAt
-                            ? "bg-emerald-50 text-emerald-800"
-                            : "bg-amber-50 text-amber-900"
-                        }`}
-                      >
-                        <p className="truncate font-medium">{task.title}</p>
-                      </div>
-                    ))}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-bold text-slate-800">
+                        Semana {index + 1}
+                      </h3>
+                      <p className="text-sm text-slate-500">
+                        {format(range.start, "dd MMM", { locale: ptBR })} –{" "}
+                        {format(range.end, "dd MMM", { locale: ptBR })}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                  <div className="mt-4 min-h-[60px]">
+                    {weekTasks.length === 0 ? (
+                      <p className="py-6 text-center text-sm text-slate-400">
+                        Nenhum conteúdo planejado
+                      </p>
+                    ) : (
+                      <ul className="flex flex-col gap-2">
+                        {weekTasks.map((task) => {
+                          const due = new Date(task.due);
+                          const isCompleted = !!task.completedAt;
+
+                          return (
+                            <li
+                              key={task.id}
+                              className={`flex gap-3 rounded-lg border border-border bg-white py-3 pl-3 pr-3 ${
+                                isCompleted
+                                  ? "border-l-4 border-l-emerald-500"
+                                  : "border-l-4 border-l-amber-400"
+                              }`}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-slate-500">
+                                  {format(due, "d MMM - HH:mm", {
+                                    locale: ptBR,
+                                  })}
+                                </p>
+                                <p className="mt-0.5 font-medium text-slate-800">
+                                  {task.title}
+                                </p>
+                                <span
+                                  className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    isCompleted
+                                      ? "bg-emerald-100 text-emerald-800"
+                                      : "bg-amber-100 text-amber-800"
+                                  }`}
+                                >
+                                  {isCompleted ? "Aprovado" : "Pendente"}
+                                </span>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                </article>
               );
-            }),
-          )}
-        </div>
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-7 gap-px rounded-xl border border-border bg-border">
+            {WEEKDAYS.map((day) => (
+              <div
+                key={day}
+                className="bg-shape py-2 text-center text-xs font-semibold text-slate-600"
+              >
+                {day}
+              </div>
+            ))}
+            {weeks.flatMap((week) =>
+              week.map((day) => {
+                const dayTasks = getTasksForDay(day);
+                const isCurrentMonth = isSameMonth(day, date);
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className="min-h-[100px] bg-white p-2"
+                  >
+                    <span
+                      className={`text-sm ${isCurrentMonth ? "text-slate-800" : "text-slate-300"}`}
+                    >
+                      {format(day, "d")}
+                    </span>
+                    <div className="mt-1 flex flex-col gap-1">
+                      {dayTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className={`rounded-lg px-2 py-1.5 text-left text-xs ${
+                            task.completedAt
+                              ? "bg-emerald-50 text-emerald-800"
+                              : "bg-amber-50 text-amber-900"
+                          }`}
+                        >
+                          <p className="truncate font-medium">{task.title}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }),
+            )}
+          </div>
+        )}
       </div>
     </>
   );
