@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CustomerWithTasks } from "@/app/clientes/[slug]/page";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CaretLeft,
   CaretRight,
@@ -47,6 +46,17 @@ export default function Calendar({
 }: CalendarProps) {
   const [date, setDate] = useState<Date>(initialDate);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.MONTHLY);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const handler = () => setIsSmallScreen(mq.matches);
+    handler();
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  const effectiveViewMode = isSmallScreen ? ViewMode.WEEKLY : viewMode;
 
   const formattedDate = useMemo(() => {
     return format(date, "MMMM yyyy", { locale: ptBR });
@@ -131,7 +141,7 @@ export default function Calendar({
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="hidden sm:flex items-center gap-2">
           <button
             type="button"
             onClick={() => setViewMode(ViewMode.WEEKLY)}
@@ -160,7 +170,7 @@ export default function Calendar({
       </div>
 
       <div className="mt-4">
-        {viewMode === ViewMode.WEEKLY ? (
+        {effectiveViewMode === ViewMode.WEEKLY ? (
           <div className="flex flex-col gap-4">
             {weekCards.map((range, index) => {
               const weekTasks = getTasksForWeekRange(range);
