@@ -44,7 +44,7 @@ export function BottomNav({
   scheduleLink,
 }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-4 left-4 right-4 max-w-[800px] mx-auto px-8 py-5 bg-secondary text-white rounded-full z-10">
+    <nav className="fixed bottom-4 left-4 right-4 max-w-[1000px] mx-auto px-8 py-5 bg-secondary text-white rounded-full z-10">
       <ul className="flex items-center justify-between">
         <li>
           <NavButton

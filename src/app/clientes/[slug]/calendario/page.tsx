@@ -4,20 +4,10 @@ import { TopNav } from "@/components/TopNav";
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { endOfMonth, parseISO, startOfMonth } from "date-fns";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
-const getMonthTasks = async (
-  slug: string,
-  date?: string,
-  isLogged?: boolean,
-) => {
-  const parsedDate = date ? parseISO(date) : new Date();
-
-  const startDate = startOfMonth(parsedDate);
-  const endDate = endOfMonth(parsedDate);
-
+const getMonthTasks = async (slug: string, isLogged?: boolean) => {
   const customer = await prismaClient.customers.findFirst({
     where: { slug },
   });
@@ -28,36 +18,20 @@ const getMonthTasks = async (
 
   const tasks = await prismaClient.tasks.findMany({
     where: {
-      due: {
-        gte: startDate,
-        lte: endDate,
-      },
       ...(!isLogged ? { archivedAt: null } : {}),
       customer: { id: customer.id },
     },
-    include: {
+    select: {
       customer: true,
-      medias: {
-        orderBy: {
-          order: "asc",
-        },
-      },
-      updatedBy: true,
-      _count: {
-        select: {
-          comments: true,
-        },
-      },
+      archivedAt: true,
+      due: true,
+      id: true,
+      title: true,
+      completedAt: true,
     },
     orderBy: {
       due: "asc",
     },
-  });
-
-  console.log({
-    startDate,
-    endDate,
-    tasks: tasks.length,
   });
 
   return {
@@ -80,15 +54,12 @@ export type MonthTasks = Prisma.PromiseReturnType<typeof getMonthTasks>;
 
 export const dynamic = "force-dynamic";
 
-export default async function CustomerCalendar({ params, searchParams }: any) {
+export default async function CustomerCalendar({ params }: any) {
   const { slug } = await params;
-  const { date } = await searchParams;
-
-  console.log(date);
 
   const session = await getServerSession(nextAuthOptions);
 
-  const customer = await getMonthTasks(slug, date, !!session);
+  const customer = await getMonthTasks(slug, !!session);
 
   if (!customer) {
     if (session) {
@@ -108,7 +79,7 @@ export default async function CustomerCalendar({ params, searchParams }: any) {
 
       <TitlePage>Calendário | {customer.name}</TitlePage>
 
-      <Calendar tasks={customer.tasks} />
+      <Calendar slug={slug} tasks={customer.tasks} />
     </>
   );
 }

@@ -39,7 +39,7 @@ export default function RootLayout({
           <ToastContainer />
 
           <div
-            className={`relative flex flex-col max-w-[800px] min-h-screen mx-auto pb-8`}
+            className={`relative flex flex-col max-w-[1000px] min-h-screen mx-auto pb-8`}
           >
             <Header />
 

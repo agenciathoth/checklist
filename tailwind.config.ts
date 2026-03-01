@@ -18,7 +18,7 @@ const config: Config = {
         custom: "0px 2px 24px rgba(0, 0, 0, 0.13)",
       },
       screens: {
-        md: "800px",
+        md: "1000px",
       },
       maxHeight: {
         "calc-vh": "calc(100dvh - 80px)",

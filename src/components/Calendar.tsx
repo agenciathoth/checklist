@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CustomerWithTasks } from "@/app/clientes/[slug]/page";
 import { useMemo, useState } from "react";
 import {
@@ -24,12 +25,14 @@ import {
   subMonths,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { MonthTasks } from "@/app/clientes/[slug]/calendario/page";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 type CalendarProps = {
+  slug: string;
   initialDate?: Date;
-  tasks: NonNullable<CustomerWithTasks>["tasks"];
+  tasks: NonNullable<MonthTasks>["tasks"];
 };
 
 enum ViewMode {
@@ -38,6 +41,7 @@ enum ViewMode {
 }
 
 export default function Calendar({
+  slug,
   initialDate = new Date(),
   tasks,
 }: CalendarProps) {
@@ -104,7 +108,7 @@ export default function Calendar({
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex  flex-col sm:flex-row items-center justify-between gap-8">
         <div className="flex items-center justify-between gap-8">
           <button
             type="button"
@@ -188,33 +192,35 @@ export default function Calendar({
                           const isCompleted = !!task.completedAt;
 
                           return (
-                            <li
-                              key={task.id}
-                              className={`flex gap-3 rounded-lg border border-border bg-white py-3 pl-3 pr-3 ${
-                                isCompleted
-                                  ? "border-l-4 border-l-emerald-500"
-                                  : "border-l-4 border-l-amber-400"
-                              }`}
-                            >
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs text-slate-500">
-                                  {format(due, "d MMM - HH:mm", {
-                                    locale: ptBR,
-                                  })}
-                                </p>
-                                <p className="mt-0.5 font-medium text-slate-800">
-                                  {task.title}
-                                </p>
-                                <span
-                                  className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                                    isCompleted
-                                      ? "bg-emerald-100 text-emerald-800"
-                                      : "bg-amber-100 text-amber-800"
-                                  }`}
-                                >
-                                  {isCompleted ? "Aprovado" : "Pendente"}
-                                </span>
-                              </div>
+                            <li key={task.id}>
+                              <Link
+                                href={`/clientes/${slug}/tarefas/${task.id}`}
+                                className={`flex gap-3 rounded-lg border border-border bg-white py-3 pl-3 pr-3 transition-colors hover:bg-slate-50 ${
+                                  isCompleted
+                                    ? "border-l-4 border-l-emerald-500"
+                                    : "border-l-4 border-l-amber-400"
+                                }`}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs text-slate-500">
+                                    {format(due, "d MMM - HH:mm", {
+                                      locale: ptBR,
+                                    })}
+                                  </p>
+                                  <p className="mt-0.5 font-medium text-slate-800">
+                                    {task.title}
+                                  </p>
+                                  <span
+                                    className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                                      isCompleted
+                                        ? "bg-emerald-100 text-emerald-800"
+                                        : "bg-amber-100 text-amber-800"
+                                    }`}
+                                  >
+                                    {isCompleted ? "Aprovado" : "Pendente"}
+                                  </span>
+                                </div>
+                              </Link>
                             </li>
                           );
                         })}
@@ -226,7 +232,7 @@ export default function Calendar({
             })}
           </div>
         ) : (
-          <div className="grid grid-cols-7 gap-px rounded-xl border border-border bg-border">
+          <div className="grid grid-cols-7 gap-px rounded-xl border border-border bg-border overflow-hidden">
             {WEEKDAYS.map((day) => (
               <div
                 key={day}
@@ -251,16 +257,17 @@ export default function Calendar({
                     </span>
                     <div className="mt-1 flex flex-col gap-1">
                       {dayTasks.map((task) => (
-                        <div
+                        <Link
                           key={task.id}
-                          className={`rounded-lg px-2 py-1.5 text-left text-xs ${
+                          href={`/clientes/${slug}/tarefas/${task.id}`}
+                          className={`block rounded-lg px-2 py-1.5 text-left text-xs transition-colors hover:opacity-90 ${
                             task.completedAt
                               ? "bg-emerald-50 text-emerald-800"
                               : "bg-amber-50 text-amber-900"
                           }`}
                         >
                           <p className="truncate font-medium">{task.title}</p>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
