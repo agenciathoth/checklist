@@ -39,7 +39,6 @@ export default async function TaskPage({
   const { slug, taskId } = await params;
 
   const session = await getServerSession(nextAuthOptions);
-
   const task = await getTask(slug, taskId, !!session);
 
   if (!task) {
@@ -48,7 +47,7 @@ export default async function TaskPage({
 
   return (
     <>
-      {session ? <TopNav /> : null}
+      <TopNav />
       <TitlePage>Tarefa | {task.customer.name}</TitlePage>
       <TaskDetail task={task} />
     </>

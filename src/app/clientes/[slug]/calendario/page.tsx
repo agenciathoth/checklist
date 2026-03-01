@@ -75,7 +75,7 @@ export default async function CustomerCalendar({ params }: any) {
 
   return (
     <>
-      {session ? <TopNav /> : null}
+      <TopNav />
 
       <TitlePage>Calendário | {customer.name}</TitlePage>
 

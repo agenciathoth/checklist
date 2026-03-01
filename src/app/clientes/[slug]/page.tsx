@@ -87,7 +87,7 @@ export default async function Customer({ params }: any) {
 
   return (
     <>
-      {session ? <TopNav /> : null}
+      <TopNav />
 
       <TitlePage>Planner | {customer.name}</TitlePage>
 

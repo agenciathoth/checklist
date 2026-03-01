@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeft, Info, List, SignOut, X } from "@phosphor-icons/react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { redirect, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -18,27 +18,13 @@ export function TopNav({
   shouldShowBackButton = true,
 }: TopNavProps) {
   const router = useRouter();
-  const pathname = usePathname();
+  const session = useSession();
 
   const [isMenuOpened, setIsMenuOpened] = useState(false);
 
   const handleMenuClick = () => {
-    const pathSegments = pathname.split("/").filter(Boolean);
-
     if (!isAdmin) {
-      const isCalendarPage = pathSegments.includes("calendario");
-      if (isCalendarPage) {
-        router.push(pathname.replace("/calendario", ""));
-        return;
-      }
-
-      const isTaskPage = pathSegments.includes("tarefas");
-      if (isTaskPage) {
-        router.push(`/${pathSegments[0]}/${pathSegments[1]}`);
-        return;
-      }
-
-      router.push("/clientes");
+      router.back();
       return;
     }
 
@@ -95,14 +81,16 @@ export function TopNav({
         </span>
       ) : null}
 
-      <button
-        type="button"
-        className="absolute top-0 right-2 flex items-center justify-center gap-2 px-4 py-2 bg-white text-text rounded-full drop-shadow-xl md:right-0"
-        onClick={handleLogout}
-      >
-        <SignOut size={18} weight="bold" />
-        <strong className="font-semibold text-sm">Sair</strong>
-      </button>
+      {session.status === "authenticated" ? (
+        <button
+          type="button"
+          className="absolute top-0 right-2 flex items-center justify-center gap-2 px-4 py-2 bg-white text-text rounded-full drop-shadow-xl md:right-0"
+          onClick={handleLogout}
+        >
+          <SignOut size={18} weight="bold" />
+          <strong className="font-semibold text-sm">Sair</strong>
+        </button>
+      ) : null}
     </nav>
   );
 }

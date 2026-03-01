@@ -12,8 +12,7 @@ export default async function CustomerLoading() {
 
   return (
     <>
-      {session ? <TopNav /> : null}
-
+      <TopNav />
       <TitlePage>Planner | Carregando...</TitlePage>
 
       <CustomerPresentation presentation={""} />
@@ -25,8 +24,6 @@ export default async function CustomerLoading() {
       </ul>
 
       <div className="h-16" />
-
-      <BottomNav />
     </>
   );
 }

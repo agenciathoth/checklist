@@ -92,6 +92,7 @@ export function TaskDetail({ task }: TaskDetailProps) {
               className="w-full"
               slidesPerView={1}
               pagination={{
+                el: `.swiperPagination-${task.id}`,
                 clickable: true,
                 bulletClass:
                   "block w-2 h-2 rounded-full bg-black/25 cursor-pointer",
@@ -122,6 +123,13 @@ export function TaskDetail({ task }: TaskDetailProps) {
                 </SwiperSlide>
               ))}
             </Swiper>
+
+            <div
+              className={cn(
+                `swiperPagination-${task.id}`,
+                "flex gap-2 justify-center mt-4 pb-6",
+              )}
+            ></div>
           </>
         ) : null}
       </div>

@@ -8,6 +8,7 @@ import {
   Calendar as CalendarIcon,
   List,
   Plus,
+  SquaresFour,
 } from "@phosphor-icons/react";
 import {
   addDays,
@@ -141,11 +142,18 @@ export default function Calendar({
           </button>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/clientes/${slug}/`}
+            className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${"border-primary text-primary hover:border-primary/90"}`}
+          >
+            <SquaresFour size={16} weight="bold" />
+            Feed
+          </Link>
           <button
             type="button"
             onClick={() => setViewMode(ViewMode.WEEKLY)}
-            className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+            className={`hidden sm:flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
               viewMode === ViewMode.WEEKLY
                 ? "border-transparent bg-primary text-white"
                 : "border-border bg-white text-slate-700 hover:bg-slate-50"
@@ -157,7 +165,7 @@ export default function Calendar({
           <button
             type="button"
             onClick={() => setViewMode(ViewMode.MONTHLY)}
-            className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+            className={`hidden sm:flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
               viewMode === ViewMode.MONTHLY
                 ? "border-transparent bg-primary text-white"
                 : "border-border bg-white text-slate-700 hover:bg-slate-50"

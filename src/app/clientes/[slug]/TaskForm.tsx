@@ -79,6 +79,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [medias, setMedias] = useState<Media[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     setMedias(
@@ -93,9 +94,20 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
     );
   }, [selectedTask?.medias]);
 
+  useEffect(() => {
+    if (isEditing) setIsFormOpen(true);
+  }, [isEditing]);
+
   const cancelEditTask = () => {
     router.replace(pathname);
     reset();
+    setIsFormOpen(false);
+  };
+
+  const closeForm = () => {
+    reset();
+    setMedias([]);
+    setIsFormOpen(false);
   };
 
   const handleCreateTask = async (formData: CreateTaskSchema) => {
@@ -228,153 +240,172 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
   };
 
   return (
-    <form
-      className="flex flex-col gap-8 w-full p-5 bg-white rounded-xl drop-shadow-custom"
-      onSubmit={handleSubmit(handleCreateTask)}
-    >
-      <h2 className="font-bold text-lg">
-        {isEditing ? "Edição de tarefa" : "Cadastro de tarefa"}
-      </h2>
+    <>
+      {!isFormOpen ? (
+        <button
+          type="button"
+          onClick={() => setIsFormOpen(true)}
+          className="flex items-center justify-center gap-2 w-full py-3 px-4 text-primary border border-primary font-semibold rounded-full hover:opacity-90 transition-opacity"
+        >
+          <Plus size={16} weight="bold" />
+          Adicionar post
+        </button>
+      ) : null}
 
-      <div className="flex flex-col gap-4">
-        <Input
-          icon={<CheckCircle />}
-          placeholder="Título"
-          error={errors.title?.message}
-          {...register("title")}
-        />
+      {isFormOpen ? (
+        <form
+          className="flex flex-col gap-8 w-full p-5 bg-white rounded-xl drop-shadow-custom"
+          onSubmit={handleSubmit(handleCreateTask)}
+        >
+          <h2 className="font-bold text-lg">
+            {isEditing ? "Edição de tarefa" : "Cadastro de tarefa"}
+          </h2>
 
-        <TextArea
-          icon={<ChatText />}
-          placeholder="Descrição"
-          error={errors.description?.message}
-          {...register("description")}
-        />
+          <div className="flex flex-col gap-4">
+            <Input
+              icon={<CheckCircle />}
+              placeholder="Título"
+              error={errors.title?.message}
+              {...register("title")}
+            />
 
-        <Input
-          type="datetime-local"
-          icon={<Calendar />}
-          placeholder="Prazo"
-          error={errors.due?.message}
-          {...register("due")}
-        />
+            <TextArea
+              icon={<ChatText />}
+              placeholder="Descrição"
+              error={errors.description?.message}
+              {...register("description")}
+            />
 
-        <Input
-          type="text"
-          icon={<ArrowsOutSimple />}
-          placeholder="Proporção"
-          error={errors.ratio?.message}
-          {...register("ratio")}
-        />
+            <Input
+              type="datetime-local"
+              icon={<Calendar />}
+              placeholder="Prazo"
+              error={errors.due?.message}
+              {...register("due")}
+            />
 
-        <Select
-          icon={<User />}
-          placeholder="Responsável"
-          options={[
-            { label: "Cliente", value: TaskResponsible.CUSTOMER },
-            { label: "Thoth", value: TaskResponsible.AGENCY },
-          ]}
-          error={errors.responsible?.message}
-          {...register("responsible")}
-        />
+            <Select
+              icon={<ArrowsOutSimple />}
+              placeholder="Proporção"
+              options={[
+                { label: "Post 1:1 - 1080 x 1080", value: "1:1" },
+                { label: "Post 4:5 - 1080 x 1350", value: "4:5" },
+                { label: "Post 3:4 - 1080 × 1440", value: "3:4" },
+                { label: "Reels 9:16 - 1080 x 1920", value: "9:16" },
+                { label: "Vídeo 16:9 - 1920 x 1080", value: "16:9" },
+              ]}
+              error={errors.ratio?.message}
+              {...register("ratio")}
+            />
 
-        <div>
-          <strong className="text-sm font-semibold">Mídias</strong>
-          <SortableList
-            onSortEnd={onSortEnd}
-            className="flex flex-wrap gap-4 w-full mt-4 select-none"
-          >
-            {medias.map(({ id, url, isVideo }, index) => (
-              <SortableItem key={id}>
-                <div
-                  className="relative flex-shrink-0 aspect-square rounded-lg overflow-hidden cursor-grab select-none"
+            <Select
+              icon={<User />}
+              placeholder="Responsável"
+              options={[
+                { label: "Cliente", value: TaskResponsible.CUSTOMER },
+                { label: "Thoth", value: TaskResponsible.AGENCY },
+              ]}
+              error={errors.responsible?.message}
+              {...register("responsible")}
+            />
+
+            <div>
+              <strong className="text-sm font-semibold">Mídias</strong>
+              <SortableList
+                onSortEnd={onSortEnd}
+                className="flex flex-wrap gap-4 w-full mt-4 select-none"
+              >
+                {medias.map(({ id, url, isVideo }, index) => (
+                  <SortableItem key={id}>
+                    <div
+                      className="relative flex-shrink-0 aspect-square rounded-lg overflow-hidden cursor-grab select-none"
+                      style={{ width: "calc(25% - 12px)" }}
+                    >
+                      <button
+                        type="button"
+                        className="absolute top-0 right-0 p-1.5 bg-red-600 text-white rounded-bl-lg z-10"
+                        onClick={() => onDeleteImage(index)}
+                      >
+                        <X size={16} weight="bold" />
+                      </button>
+
+                      {isVideo ? (
+                        <>
+                          <i
+                            className={cn(
+                              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                              "text-white drop-shadow-xl z-10",
+                            )}
+                          >
+                            <Play size={36} weight="fill" />
+                          </i>
+
+                          <video className="absolute inset-0 size-full object-cover">
+                            <source src={url} />
+                          </video>
+                        </>
+                      ) : (
+                        <Image
+                          className="absolute inset-0 size-full object-cover"
+                          src={url}
+                          alt=""
+                          fill
+                          draggable={false}
+                        />
+                      )}
+                    </div>
+                  </SortableItem>
+                ))}
+
+                <li
+                  className="flex-shrink-0 flex aspect-square cursor-grab select-none rounded-lg overflow-hidden"
                   style={{ width: "calc(25% - 12px)" }}
                 >
                   <button
                     type="button"
-                    className="absolute top-0 right-0 p-1.5 bg-red-600 text-white rounded-bl-lg z-10"
-                    onClick={() => onDeleteImage(index)}
+                    className="flex items-center justify-center w-full bg-transparent text-primary border-primary border-2 rounded-lg overflow-hidden"
+                    onClick={() => inputRef.current?.click()}
                   >
-                    <X size={16} weight="bold" />
+                    <Plus size={24} weight="bold" />
                   </button>
+                </li>
+              </SortableList>
 
-                  {isVideo ? (
-                    <>
-                      <i
-                        className={cn(
-                          "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                          "text-white drop-shadow-xl z-10",
-                        )}
-                      >
-                        <Play size={36} weight="fill" />
-                      </i>
+              <input
+                className="hidden"
+                type="file"
+                ref={inputRef}
+                accept="image/*, video/*"
+                onChange={onUpload}
+                multiple
+              />
+            </div>
+          </div>
 
-                      <video className="absolute inset-0 size-full object-cover">
-                        <source src={url} />
-                      </video>
-                    </>
-                  ) : (
-                    <Image
-                      className="absolute inset-0 size-full object-cover"
-                      src={url}
-                      alt=""
-                      fill
-                      draggable={false}
-                    />
-                  )}
-                </div>
-              </SortableItem>
-            ))}
-
-            <li
-              className="flex-shrink-0 flex aspect-square cursor-grab select-none rounded-lg overflow-hidden"
-              style={{ width: "calc(25% - 12px)" }}
+          <div className="flex justify-between gap-4">
+            <button
+              type="button"
+              className="flex-1 sm:flex-initial sm:min-w-44 p-4 bg-shape-text text-text font-bold text-sm rounded-full uppercase disabled:opacity-50"
+              onClick={isEditing ? cancelEditTask : closeForm}
             >
-              <button
-                type="button"
-                className="flex items-center justify-center w-full bg-transparent text-primary border-primary border-2 rounded-lg overflow-hidden"
-                onClick={() => inputRef.current?.click()}
-              >
-                <Plus size={24} weight="bold" />
-              </button>
-            </li>
-          </SortableList>
+              Cancelar
+            </button>
 
-          <input
-            className="hidden"
-            type="file"
-            ref={inputRef}
-            accept="image/*, video/*"
-            onChange={onUpload}
-            multiple
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-between gap-4">
-        {isEditing ? (
-          <button
-            type="button"
-            className="flex-1 sm:flex-initial sm:min-w-44 p-4 bg-shape-text text-text font-bold text-sm rounded-full uppercase disabled:opacity-50"
-            onClick={cancelEditTask}
-          >
-            Cancelar
-          </button>
-        ) : null}
-
-        <button
-          type="submit"
-          className="flex-1 sm:flex-initial sm:min-w-44 ml-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
-        >
-          {!isSubmitting
-            ? !isEditing
-              ? "Adicionar"
-              : "Editar"
-            : !isEditing
-              ? "Adicionando..."
-              : "Editando..."}
-        </button>
-      </div>
-    </form>
+            <button
+              type="submit"
+              className="flex-1 sm:flex-initial sm:min-w-44 ml-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
+            >
+              {!isSubmitting
+                ? !isEditing
+                  ? "Adicionar"
+                  : "Editar"
+                : !isEditing
+                  ? "Adicionando..."
+                  : "Editando..."}
+            </button>
+          </div>
+        </form>
+      ) : null}
+    </>
   );
 }
