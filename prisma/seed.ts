@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole } from "@prisma/client";
+import { PrismaClient, TaskResponsible, UserRole } from "@prisma/client";
 import { hash } from "bcrypt";
 
 const prisma = new PrismaClient();
@@ -21,10 +21,21 @@ async function main() {
     },
   });
 
-  await prisma.customers.create({
+  const customer = await prisma.customers.create({
     data: {
       name: "Teste",
       slug: "teste",
+      updatedBy: { connect: { id: user.id } },
+    },
+  });
+
+  await prisma.tasks.create({
+    data: {
+      title: "Tarefa 1",
+      description: "Descrição da tarefa 1",
+      due: new Date(),
+      responsible: TaskResponsible.CUSTOMER,
+      customer: { connect: { id: customer.id } },
       updatedBy: { connect: { id: user.id } },
     },
   });

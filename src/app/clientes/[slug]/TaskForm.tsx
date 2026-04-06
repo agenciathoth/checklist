@@ -54,6 +54,8 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
   const selectedTask = tasks.find(({ id }) => id === taskId);
   const isEditing = !!selectedTask;
 
+  const [medias, setMedias] = useState<Media[]>([]);
+
   const {
     register,
     handleSubmit,
@@ -70,7 +72,14 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
         : "",
       ratio: selectedTask?.ratio || "",
       responsible: selectedTask?.responsible || TaskResponsible.CUSTOMER,
-      medias: [],
+      medias: medias.map((m) => ({
+        ...(m.id ? { id: m.id } : {}),
+        order: m.order,
+        path: m.path,
+        type: m.type,
+        url: m.url,
+        ...(m.isVideo !== undefined ? { isVideo: m.isVideo } : {}),
+      })),
       customerId,
     },
     resolver: zodResolver(createTaskSchema),
@@ -78,7 +87,6 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [medias, setMedias] = useState<Media[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {

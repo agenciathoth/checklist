@@ -18,6 +18,8 @@ import {
   Pencil,
   SpinnerGap,
   Trash,
+  CalendarBlank,
+  CalendarCheck,
 } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
@@ -103,6 +105,49 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
       );
     } finally {
       setIsChecking(false);
+      setSelectedTask(null);
+    }
+  };
+
+  const toggleScheduleTask = async (selectedTask: Task) => {
+    if (!selectedTask) return;
+    if (
+      session.status !== "authenticated" &&
+      selectedTask.responsible === TaskResponsible.AGENCY
+    )
+      return;
+
+    setSelectedTask(selectedTask);
+
+    try {
+      await api.patch(`/tasks/${selectedTask.id}/schedule`);
+
+      setTasks((prevState) => {
+        return prevState.map((task) => {
+          if (task.id === selectedTask.id) {
+            return {
+              ...task,
+              scheduledAt: selectedTask.scheduledAt ? null : new Date(),
+            };
+          }
+
+          return task;
+        });
+      });
+
+      toast.success(
+        !selectedTask.completedAt
+          ? "Tarefa marcada como agendada com sucesso!"
+          : "Tarefa desmarcada como agendada com sucesso!",
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        !selectedTask.completedAt
+          ? "Não foi possível marcar a tarefa como agendada"
+          : "Não foi possível desmarcar a tarefa como agendada",
+      );
+    } finally {
       setSelectedTask(null);
     }
   };
@@ -193,7 +238,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
         {tasks.map((task) => {
           const isArchived = task.archivedAt !== null;
           const isChecked = task.completedAt !== null;
-          const isLate = isBefore(task.due, new Date());
+          const isScheduled = task.scheduledAt !== null;
           const variantByResponsible =
             task.responsible === TaskResponsible.AGENCY
               ? "primary"
@@ -214,97 +259,83 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                 })}
               >
                 <div className="flex flex-col gap-3 p-6">
-                  <div className="flex items-start gap-4 w-full">
-                    <div className="flex-1 flex flex-col gap-2">
-                      <div className="flex gap-2 flex-wrap">
-                        {isArchived ? <Pill>Arquivada</Pill> : null}
-
-                        {session.data?.user.role === UserRole.ADMIN ? (
-                          <Pill>
-                            {(task.updatedAt &&
-                            !isEqual(task.createdAt, task.updatedAt)
-                              ? "Última atualização por: "
-                              : "Criado por: "
-                            ).concat(task.updatedBy.name)}
-                          </Pill>
-                        ) : null}
-                      </div>
-
-                      <div className="flex gap-2 flex-wrap">
-                        {isChecked && isLate ? (
-                          <Pill variant="primary">Agendado</Pill>
-                        ) : null}
-
-                        <Pill variant={variantByResponsible}>
-                          Prazo:{" "}
-                          {format(task.due, "dd 'de' MMM, HH:mm", {
-                            locale: ptBR,
-                          })}
-                        </Pill>
-
-                        <Pill variant={variantByResponsible}>
-                          {task.responsible === TaskResponsible.AGENCY
-                            ? "Thoth"
-                            : "Cliente"}
-                        </Pill>
-                      </div>
-                    </div>
-
-                    <div className="flex-shrink-0 flex gap-4">
+                  <div className="flex flex-col items-start gap-4 w-full">
+                    <div className="flex-shrink-0 flex gap-4 ml-auto">
                       {!session || !isArchived ? (
-                        <>
-                          <button
-                            type="button"
-                            className={cn(
-                              "flex items-center justify-center w-7 h-7 rounded-full disabled:cursor-not-allowed",
-                              {
-                                "bg-border text-text": !isChecked,
-                                "bg-green-600 text-white": isChecked,
-                              },
-                            )}
-                            title={
-                              isChecked
-                                ? "Remover aprovação"
-                                : "Marcar como aprovada"
-                            }
-                            disabled={
-                              (selectedTask === task && isChecking) ||
-                              (!session.data &&
-                                task.responsible === TaskResponsible.AGENCY)
-                            }
-                            onClick={() => toggleCheckTask(task)}
-                          >
-                            {selectedTask === task && isChecking ? (
-                              <SpinnerGap
-                                size={16}
-                                weight="bold"
-                                className="animate-spin"
-                              />
-                            ) : isChecked ? (
-                              <Check size={16} weight="bold" />
-                            ) : null}
-                          </button>
+                        <button
+                          type="button"
+                          className={cn(
+                            "flex items-center justify-center w-7 h-7 rounded-full disabled:cursor-not-allowed",
+                            {
+                              "bg-border text-text": !isChecked,
+                              "bg-green-600 text-white": isChecked,
+                            },
+                          )}
+                          title={
+                            isChecked
+                              ? "Remover aprovação"
+                              : "Marcar como aprovada"
+                          }
+                          disabled={
+                            (selectedTask === task && isChecking) ||
+                            (!session.data &&
+                              task.responsible === TaskResponsible.AGENCY)
+                          }
+                          onClick={() => toggleCheckTask(task)}
+                        >
+                          {selectedTask === task && isChecking ? (
+                            <SpinnerGap
+                              size={16}
+                              weight="bold"
+                              className="animate-spin"
+                            />
+                          ) : isChecked ? (
+                            <Check size={16} weight="bold" />
+                          ) : null}
+                        </button>
+                      ) : null}
 
-                          <button
-                            type="button"
-                            className={cn(
-                              "relative flex items-center justify-center w-7 h-7  text-primary rounded-full disabled:cursor-not-allowed",
-                            )}
-                            title={
-                              isChecked
-                                ? "Marcar como pendente"
-                                : "Marcar como finalizada"
-                            }
-                            onClick={() => openComments(task)}
-                          >
-                            <span className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-white font-semibold text-xs leading-[1]">
-                              {task._count.comments > 9
-                                ? "9+"
-                                : task._count.comments}
-                            </span>
-                            <ChatCircle size={28} weight="fill" />
-                          </button>
-                        </>
+                      {session.data && isChecked && !isArchived ? (
+                        <button
+                          type="button"
+                          className={cn(
+                            "flex items-center justify-center w-7 h-7 rounded-full disabled:cursor-not-allowed",
+                            {
+                              "bg-border text-text": !isScheduled,
+                              "bg-green-600 text-white": isScheduled,
+                            },
+                          )}
+                          title={
+                            !isScheduled
+                              ? "Marcar como agendado"
+                              : "Desmarcar como agendado"
+                          }
+                          onClick={() => toggleScheduleTask(task)}
+                        >
+                          {!isScheduled ? (
+                            <CalendarBlank size={16} weight="bold" />
+                          ) : (
+                            <CalendarCheck size={16} weight="bold" />
+                          )}
+                        </button>
+                      ) : null}
+
+                      {!session || !isArchived ? (
+                        <button
+                          type="button"
+                          className={cn(
+                            "relative flex items-center justify-center w-7 h-7  text-primary rounded-full disabled:cursor-not-allowed",
+                          )}
+                          title="Abrir comentários"
+                          onClick={() => openComments(task)}
+                        >
+                          <span className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-white font-semibold text-xs leading-[1]">
+                            {task._count.comments > 9
+                              ? "9+"
+                              : task._count.comments}
+                          </span>
+                          <ChatCircle size={28} weight="fill" />
+                        </button>
                       ) : null}
 
                       {session.data ? (
@@ -348,6 +379,39 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                           </>
                         )
                       ) : null}
+                    </div>
+
+                    <div className="flex-1 flex flex-col gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        {isArchived ? <Pill>Arquivada</Pill> : null}
+
+                        {session.data?.user.role === UserRole.ADMIN ? (
+                          <Pill>
+                            {(task.updatedAt &&
+                            !isEqual(task.createdAt, task.updatedAt)
+                              ? "Última atualização por: "
+                              : "Criado por: "
+                            ).concat(task.updatedBy.name)}
+                          </Pill>
+                        ) : null}
+                      </div>
+
+                      <div className="flex gap-2 flex-wrap">
+                        {isChecked || isScheduled ? (
+                          <Pill variant="primary">
+                            {isChecked && !isScheduled
+                              ? "Aprovado"
+                              : "Agendado"}
+                          </Pill>
+                        ) : null}
+
+                        <Pill variant={variantByResponsible}>
+                          <CalendarBlank size={20} weight="bold" />
+                          {format(task.due, "dd 'de' MMM, HH:mm", {
+                            locale: ptBR,
+                          })}
+                        </Pill>
+                      </div>
                     </div>
                   </div>
 
@@ -399,7 +463,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                             </video>
                           ) : (
                             <img
-                              className="max-w-full object-cover mx-auto select-none"
+                              className="max-w-full h-full object-cover mx-auto select-none"
                               src={getMediaURL(path)}
                               alt=""
                             />

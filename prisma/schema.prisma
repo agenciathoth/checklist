@@ -51,6 +51,7 @@ model Tasks {
   responsible TaskResponsible
   ratio       String?         
   completedAt DateTime?       @map("completed_at")
+  scheduledAt DateTime?       @map("scheduled_at")
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime?       @updatedAt @map("updated_at")
   archivedAt  DateTime?       @map("archived_at")

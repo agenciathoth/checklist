@@ -15,9 +15,7 @@ export const createTaskSchema = z
       ),
     ratio: z
       .string()
-      .regex(/^\d+:\d+$/, {
-        message: "Formato inválido. Use número:número (ex: 16:9)",
-      })
+
       .optional(),
     responsible: z.nativeEnum(TaskResponsible),
     customerId: z.string().cuid(),
@@ -33,10 +31,11 @@ export const createTaskSchema = z
     ),
   })
   .superRefine((data, ctx) => {
-    if (data.medias.length > 0 && !data.ratio) {
+    const isRatioValid = /^\d+:\d+$/.test(data.ratio || "");
+    if (data.medias.length > 0 && !isRatioValid) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "A proporção (ratio) é obrigatória ao anexar mídias.",
+        message: "Formato inválido. Use número:número (ex: 16:9)",
         path: ["ratio"],
       });
     }
