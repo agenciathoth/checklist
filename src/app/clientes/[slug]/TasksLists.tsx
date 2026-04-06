@@ -20,6 +20,7 @@ import {
   Trash,
   CalendarBlank,
   CalendarCheck,
+  DownloadSimple,
 } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
@@ -244,6 +245,8 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
               ? "primary"
               : "secondary";
 
+          const hasMoreThanOneMedia = task.medias.length > 1;
+
           return (
             <li
               key={task.id}
@@ -422,6 +425,19 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
 
                 {task.medias.length > 0 ? (
                   <>
+                    {!hasMoreThanOneMedia &&
+                    task.medias[0]?.type.startsWith("video") ? (
+                      <div className="px-6 pb-3">
+                        <a
+                          href={`/api/media/${task.medias[0].id}/download`}
+                          className="inline-flex items-center gap-2 text-sm font-semibold bg-primary text-white rounded-xl px-4 py-2 hover:opacity-90 transition-opacity"
+                        >
+                          <DownloadSimple size={20} weight="bold" />
+                          Baixar vídeo
+                        </a>
+                      </div>
+                    ) : null}
+
                     <Swiper
                       onSwiper={setSwiperInstance}
                       autoHeight={!task.ratio}
@@ -475,7 +491,7 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
                     <div
                       className={cn(
                         `swiperPagination-${task.id}`,
-                        "flex gap-2 justify-center mt-4 pb-6",
+                        `${hasMoreThanOneMedia ? "flex" : "hidden"} gap-2 justify-center mt-4 pb-6`,
                       )}
                     ></div>
                   </>

@@ -10,7 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { getMediaURL } from "@/lib/aws";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import { CalendarBlank } from "@phosphor-icons/react";
+import { CalendarBlank, DownloadSimple } from "@phosphor-icons/react";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -104,6 +104,19 @@ export function TaskDetail({ task }: TaskDetailProps) {
 
         {task.medias.length > 0 ? (
           <>
+            {task.medias.length === 1 &&
+            task.medias[0].type.startsWith("video") ? (
+              <div className="px-6 pb-3">
+                <a
+                  href={`/api/media/${task.medias[0].id}/download`}
+                  className="inline-flex items-center gap-2 text-sm font-semibold bg-primary text-white rounded-full px-4 py-2 hover:opacity-90 transition-opacity"
+                >
+                  <DownloadSimple size={20} weight="bold" />
+                  Baixar vídeo
+                </a>
+              </div>
+            ) : null}
+
             <Swiper
               onSwiper={setSwiperInstance}
               autoHeight={!task.ratio}
