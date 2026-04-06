@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import {
   CaretLeft,
   CaretRight,
@@ -26,6 +26,7 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MonthTasks } from "@/app/clientes/[slug]/calendario/page";
+import { CalendarPostPreview } from "@/components/CalendarPostPreview";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -48,6 +49,42 @@ export default function Calendar({
   const [date, setDate] = useState<Date>(initialDate);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.MONTHLY);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  const previewCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [preview, setPreview] = useState<{
+    task: (typeof tasks)[number];
+    rect: DOMRect;
+  } | null>(null);
+
+  const clearPreviewCloseTimer = () => {
+    if (previewCloseTimer.current != null) {
+      clearTimeout(previewCloseTimer.current);
+      previewCloseTimer.current = null;
+    }
+  };
+
+  const schedulePreviewClose = () => {
+    clearPreviewCloseTimer();
+    previewCloseTimer.current = setTimeout(() => {
+      setPreview(null);
+      previewCloseTimer.current = null;
+    }, 160);
+  };
+
+  const isTouchPrimary = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(hover: none)").matches;
+
+  const openPreviewAt = (task: (typeof tasks)[number], el: HTMLElement) => {
+    clearPreviewCloseTimer();
+    setPreview({ task, rect: el.getBoundingClientRect() });
+  };
+
+  useEffect(() => {
+    return () => {
+      clearPreviewCloseTimer();
+    };
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 639px)");
@@ -117,8 +154,44 @@ export default function Calendar({
     });
   };
 
+  const taskPreviewLinkProps = (task: (typeof tasks)[number]) => ({
+    "data-calendar-preview-trigger": "",
+    "data-task-id": task.id,
+    onMouseEnter: (e: MouseEvent<HTMLAnchorElement>) => {
+      if (isTouchPrimary()) return;
+      openPreviewAt(task, e.currentTarget);
+    },
+    onMouseLeave: () => {
+      if (isTouchPrimary()) return;
+      schedulePreviewClose();
+    },
+    onClick: (e: MouseEvent<HTMLAnchorElement>) => {
+      if (!isTouchPrimary()) return;
+      e.preventDefault();
+      setPreview((p) =>
+        p?.task.id === task.id
+          ? null
+          : { task, rect: e.currentTarget.getBoundingClientRect() },
+      );
+    },
+  });
+
   return (
     <>
+      {preview ? (
+        <CalendarPostPreview
+          task={preview.task}
+          slug={slug}
+          anchorRect={preview.rect}
+          onRequestClose={() => {
+            clearPreviewCloseTimer();
+            setPreview(null);
+          }}
+          onPreviewMouseEnter={clearPreviewCloseTimer}
+          onPreviewMouseLeave={schedulePreviewClose}
+        />
+      ) : null}
+
       <div className="flex  flex-col sm:flex-row items-center justify-between gap-8">
         <div className="flex items-center justify-between gap-8">
           <button
@@ -213,6 +286,7 @@ export default function Calendar({
                             <li key={task.id}>
                               <Link
                                 href={`/clientes/${slug}/tarefas/${task.id}`}
+                                {...taskPreviewLinkProps(task)}
                                 className={`flex gap-3 rounded-lg border border-border bg-white py-3 pl-3 pr-3 transition-colors hover:bg-slate-50 ${
                                   isCompleted
                                     ? "border-l-4 border-l-emerald-500"
@@ -278,6 +352,7 @@ export default function Calendar({
                         <Link
                           key={task.id}
                           href={`/clientes/${slug}/tarefas/${task.id}`}
+                          {...taskPreviewLinkProps(task)}
                           className={`block rounded-lg px-2 py-1.5 text-left text-xs transition-colors hover:opacity-90 ${
                             task.completedAt
                               ? "bg-emerald-50 text-emerald-800"

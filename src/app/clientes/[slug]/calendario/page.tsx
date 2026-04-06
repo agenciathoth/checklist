@@ -28,6 +28,11 @@ const getMonthTasks = async (slug: string, isLogged?: boolean) => {
       id: true,
       title: true,
       completedAt: true,
+      medias: {
+        orderBy: { order: "asc" },
+        take: 1,
+        select: { id: true, path: true, type: true },
+      },
     },
     orderBy: {
       due: "asc",
