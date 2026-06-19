@@ -1,14 +1,13 @@
 "use client";
 
-import { Swiper, SwiperSlide, SwiperRef, SwiperClass } from "swiper/react";
+import { Swiper, SwiperSlide, SwiperClass } from "swiper/react";
 import { Pagination } from "swiper/modules";
-import Image from "next/image";
 import { Pill } from "@/components/Pill";
 import { cn } from "@/utils/cn";
-import { TaskResponsible, Tasks, UserRole } from "@prisma/client";
+import { TaskResponsible, UserRole } from "@prisma/client";
 import { useSession } from "next-auth/react";
-import { CustomerWithTasks } from "./page";
-import { format, isBefore, isEqual, parseISO } from "date-fns";
+import { TaskListItem } from "@/lib/tasks";
+import { format, isEqual } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   ArchiveBox,
@@ -22,13 +21,10 @@ import {
   CalendarCheck,
   DownloadSimple,
 } from "@phosphor-icons/react";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "react-toastify";
-
-type TasksListProps = Pick<Exclude<CustomerWithTasks, null>, "tasks">;
-type Task = TasksListProps["tasks"][number];
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -36,10 +32,25 @@ import "swiper/css/pagination";
 import { getMediaURL } from "@/lib/aws";
 import { Comments } from "./Comments";
 
-export function TasksList({ tasks: _tasks }: TasksListProps) {
+type Task = TaskListItem;
+
+type TasksListProps = {
+  initialTasks: TaskListItem[];
+  initialHasMore: boolean;
+  customerId: string;
+};
+
+export function TasksList({
+  initialTasks,
+  initialHasMore,
+  customerId,
+}: TasksListProps) {
   const session = useSession();
 
-  const [tasks, setTasks] = useState(_tasks);
+  const [tasks, setTasks] = useState(initialTasks);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [swiperInstance, setSwiperInstance] = useState<SwiperClass | null>(
     null,
@@ -49,9 +60,57 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isCommentOpened, setIsCommentOpened] = useState(false);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+
+    try {
+      const { data } = await api.get<{
+        tasks: TaskListItem[];
+        pagination: { page: number; hasMore: boolean };
+      }>(`customers/${customerId}/tasks`, {
+        params: { page: page + 1 },
+      });
+
+      setTasks((prevState) => {
+        const existingIds = new Set(prevState.map((task) => task.id));
+        const newTasks = data.tasks.filter((task) => !existingIds.has(task.id));
+        return [...prevState, ...newTasks];
+      });
+      setPage(data.pagination.page);
+      setHasMore(data.pagination.hasMore);
+    } catch (error) {
+      console.error(error);
+      toast.error("Não foi possível carregar mais tarefas");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [customerId, page, hasMore, isLoadingMore]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: "600px" },
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   const toggleCheckTask = async (selectedTask: Task) => {
     if (!selectedTask) return;
@@ -501,6 +560,17 @@ export function TasksList({ tasks: _tasks }: TasksListProps) {
           );
         })}
       </ul>
+
+      {hasMore ? (
+        <div
+          ref={sentinelRef}
+          className="flex items-center justify-center py-6"
+        >
+          {isLoadingMore ? (
+            <SpinnerGap size={24} weight="bold" className="animate-spin" />
+          ) : null}
+        </div>
+      ) : null}
 
       <Comments
         taskId={selectedTask?.id || ""}
