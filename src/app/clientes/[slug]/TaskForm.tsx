@@ -19,13 +19,13 @@ import {
   ArrowsOutSimple,
   Play,
 } from "@phosphor-icons/react";
-import { PrismaClient, TaskResponsible } from "@prisma/client";
+import { TaskResponsible } from "@prisma/client";
 import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { CreateTaskSchema, createTaskSchema } from "@/validators/task";
 import { TextArea } from "@/components/TextArea";
-import { CustomerWithTasks } from "./page";
+import { TaskEditItem } from "@/lib/tasks";
 import { subMinutes } from "date-fns";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { getMediaURL } from "@/lib/aws";
@@ -33,10 +33,7 @@ import { cn } from "@/utils/cn";
 import { TaskType } from "@/utils/api";
 import { getPresignedURL } from "@/utils/presignedURL";
 
-interface TaskFormProps extends Pick<
-  Exclude<CustomerWithTasks, null>,
-  "tasks"
-> {
+interface TaskFormProps {
   customerId: string;
 }
 
@@ -44,14 +41,15 @@ type Media = CreateTaskSchema["medias"][0] & {
   file?: File;
 };
 
-export function TaskForm({ customerId, tasks }: TaskFormProps) {
+export function TaskForm({ customerId }: TaskFormProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
   const taskId = searchParams.get("id");
 
-  const selectedTask = tasks.find(({ id }) => id === taskId);
+  const [selectedTask, setSelectedTask] = useState<TaskEditItem | null>(null);
+  const [isLoadingTask, setIsLoadingTask] = useState(false);
   const isEditing = !!selectedTask;
 
   const [medias, setMedias] = useState<Media[]>([]);
@@ -66,7 +64,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
       title: selectedTask?.title || "",
       description: selectedTask?.description || "",
       due: selectedTask
-        ? subMinutes(selectedTask.due, new Date().getTimezoneOffset())
+        ? subMinutes(new Date(selectedTask.due), new Date().getTimezoneOffset())
             .toISOString()
             .slice(0, 16)
         : "",
@@ -90,6 +88,33 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
+    if (!taskId) {
+      setSelectedTask(null);
+      return;
+    }
+
+    setIsFormOpen(true);
+
+    const fetchTask = async () => {
+      setSelectedTask(null);
+      setIsLoadingTask(true);
+
+      try {
+        const { data } = await api.get<TaskEditItem>(`tasks/${taskId}`);
+        setSelectedTask(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Não foi possível carregar a tarefa");
+        router.replace(pathname);
+      } finally {
+        setIsLoadingTask(false);
+      }
+    };
+
+    fetchTask();
+  }, [taskId, pathname, router]);
+
+  useEffect(() => {
     setMedias(
       selectedTask?.medias.map(({ id, order, path, type }) => ({
         id,
@@ -102,13 +127,10 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
     );
   }, [selectedTask?.medias]);
 
-  useEffect(() => {
-    if (isEditing) setIsFormOpen(true);
-  }, [isEditing]);
-
   const cancelEditTask = () => {
     router.replace(pathname);
     reset();
+    setSelectedTask(null);
     setIsFormOpen(false);
   };
 
@@ -269,7 +291,13 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
             {isEditing ? "Edição de tarefa" : "Cadastro de tarefa"}
           </h2>
 
-          <div className="flex flex-col gap-4">
+          <fieldset
+            disabled={isLoadingTask}
+            className={cn(
+              "flex flex-col gap-4 border-0 p-0 m-0 min-w-0 transition-opacity",
+              { "opacity-20 pointer-events-none": isLoadingTask },
+            )}
+          >
             <Input
               icon={<CheckCircle />}
               placeholder="Título"
@@ -388,7 +416,7 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
                 multiple
               />
             </div>
-          </div>
+          </fieldset>
 
           <div className="flex justify-between gap-4">
             <button
@@ -401,15 +429,18 @@ export function TaskForm({ customerId, tasks }: TaskFormProps) {
 
             <button
               type="submit"
+              disabled={isLoadingTask || isSubmitting}
               className="flex-1 sm:flex-initial sm:min-w-44 ml-auto p-4 bg-primary text-white font-bold text-sm rounded-full uppercase disabled:opacity-50"
             >
-              {!isSubmitting
-                ? !isEditing
-                  ? "Adicionar"
-                  : "Editar"
-                : !isEditing
-                  ? "Adicionando..."
-                  : "Editando..."}
+              {isLoadingTask
+                ? "Carregando..."
+                : !isSubmitting
+                  ? !isEditing
+                    ? "Adicionar"
+                    : "Editar"
+                  : !isEditing
+                    ? "Adicionando..."
+                    : "Editando..."}
             </button>
           </div>
         </form>

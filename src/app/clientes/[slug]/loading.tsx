@@ -16,7 +16,7 @@ export default async function CustomerLoading() {
       <TitlePage>Planner | Carregando...</TitlePage>
 
       <CustomerPresentation presentation={""} />
-      {session ? <TaskForm customerId={""} tasks={[]} /> : null}
+      {session ? <TaskForm customerId={""} /> : null}
       <ul className="flex flex-col gap-6 p-6 bg-white rounded-xl drop-shadow-custom">
         {[...new Array(6)].map((_, index) => (
           <Skeleton key={index} className="w-full h-[150px]" />
