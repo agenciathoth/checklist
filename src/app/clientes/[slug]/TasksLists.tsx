@@ -21,7 +21,14 @@ import {
   CalendarCheck,
   DownloadSimple,
 } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState, Dispatch, SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { api } from "@/lib/api";
 import { toast } from "react-toastify";
 
@@ -56,21 +63,18 @@ export function TasksList({
 }: TasksListProps) {
   const session = useSession();
 
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
   const [swiperInstance, setSwiperInstance] = useState<SwiperClass | null>(
     null,
   );
 
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isCommentOpened, setIsCommentOpened] = useState(false);
 
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return;
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
+  const loadMore = useCallback(async () => {
     setIsLoadingMore(true);
 
     try {
@@ -94,7 +98,7 @@ export function TasksList({
     } finally {
       setIsLoadingMore(false);
     }
-  }, [customerId, page, hasMore, isLoadingMore]);
+  }, [customerId, page, setTasks, setPage, setHasMore]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -102,7 +106,7 @@ export function TasksList({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
+        if (!isLoadingMore && entries[0]?.isIntersecting) {
           loadMore();
         }
       },
