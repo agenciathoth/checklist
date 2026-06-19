@@ -3,8 +3,6 @@ import { TopNav } from "@/components/TopNav";
 import { nextAuthOptions } from "@/config/auth";
 import { getServerSession } from "next-auth";
 import { CustomerPresentation } from "./CustomerPresentation";
-import { BottomNav } from "./BottomNav";
-import { TaskForm } from "./TaskForm";
 import { Skeleton } from "@/components/Skeleton";
 
 export default async function CustomerLoading() {
@@ -16,7 +14,8 @@ export default async function CustomerLoading() {
       <TitlePage>Planner | Carregando...</TitlePage>
 
       <CustomerPresentation presentation={""} />
-      {session ? <TaskForm customerId={""} /> : null}
+      {session ? <Skeleton className="w-full h-12 rounded-full" /> : null}
+      <Skeleton className="w-full h-12 rounded-full" />
       <ul className="flex flex-col gap-6 p-6 bg-white rounded-xl drop-shadow-custom">
         {[...new Array(6)].map((_, index) => (
           <Skeleton key={index} className="w-full h-[150px]" />

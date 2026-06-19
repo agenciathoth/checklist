@@ -1,7 +1,7 @@
 import { prismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
-export const TASKS_PAGE_SIZE = 10;
+export const TASKS_PAGE_SIZE = 20;
 
 export const taskListInclude = {
   customer: true,

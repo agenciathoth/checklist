@@ -1,5 +1,5 @@
 import { prismaClient } from "@/lib/prisma";
-import { getCustomerTasksPaginated, TASKS_PAGE_SIZE } from "@/lib/tasks";
+import { getCustomerTasksPaginated, TASKS_PAGE_SIZE } from "@/services/tasks";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z, ZodError } from "zod";
