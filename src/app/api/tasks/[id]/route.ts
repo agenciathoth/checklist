@@ -1,6 +1,6 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
-import { taskEditInclude } from "@/lib/tasks";
+import { taskEditInclude } from "@/services/tasks";
 import { createTaskSchema } from "@/validators/task";
 import { Prisma } from "@prisma/client";
 import { parseISO } from "date-fns";

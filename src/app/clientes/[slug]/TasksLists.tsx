@@ -6,7 +6,7 @@ import { Pill } from "@/components/Pill";
 import { cn } from "@/utils/cn";
 import { TaskResponsible, UserRole } from "@prisma/client";
 import { useSession } from "next-auth/react";
-import { TaskListItem } from "@/lib/tasks";
+import { TaskListItem } from "@/services/tasks";
 import { format, isEqual } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -21,8 +21,7 @@ import {
   CalendarCheck,
   DownloadSimple,
 } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState, Dispatch, SetStateAction } from "react";
 import { api } from "@/lib/api";
 import { toast } from "react-toastify";
 
@@ -35,30 +34,33 @@ import { Comments } from "./Comments";
 type Task = TaskListItem;
 
 type TasksListProps = {
-  initialTasks: TaskListItem[];
-  initialHasMore: boolean;
+  tasks: TaskListItem[];
+  setTasks: Dispatch<SetStateAction<TaskListItem[]>>;
+  page: number;
+  setPage: Dispatch<SetStateAction<number>>;
+  hasMore: boolean;
+  setHasMore: Dispatch<SetStateAction<boolean>>;
   customerId: string;
+  onEditTask: (taskId: string) => void;
 };
 
 export function TasksList({
-  initialTasks,
-  initialHasMore,
+  tasks,
+  setTasks,
+  page,
+  setPage,
+  hasMore,
+  setHasMore,
   customerId,
+  onEditTask,
 }: TasksListProps) {
   const session = useSession();
 
-  const [tasks, setTasks] = useState(initialTasks);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [swiperInstance, setSwiperInstance] = useState<SwiperClass | null>(
     null,
   );
-
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -213,9 +215,7 @@ export function TasksList({
   };
 
   const editTask = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("id", id);
-    router.replace(`${pathname}?${params.toString()}`);
+    onEditTask(id);
   };
 
   const toggleArchiveTask = async (id: string, isArchived: boolean) => {

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import SortableList, { SortableItem } from "react-easy-sort";
 import arrayMove from "array-move";
 
@@ -25,29 +24,32 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { CreateTaskSchema, createTaskSchema } from "@/validators/task";
 import { TextArea } from "@/components/TextArea";
-import { TaskEditItem } from "@/lib/tasks";
-import { subMinutes } from "date-fns";
+import { TaskEditItem, TaskListItem } from "@/services/tasks";
+import { parseISO, subMinutes } from "date-fns";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { getMediaURL } from "@/lib/aws";
 import { cn } from "@/utils/cn";
-import { TaskType } from "@/utils/api";
 import { getPresignedURL } from "@/utils/presignedURL";
 
 interface TaskFormProps {
   customerId: string;
+  editingTaskId: string | null;
+  onCloseEdit: () => void;
+  onTaskCreated: () => void;
+  onTaskUpdated: (taskId: string, data: Partial<TaskListItem>) => void;
 }
 
 type Media = CreateTaskSchema["medias"][0] & {
   file?: File;
 };
 
-export function TaskForm({ customerId }: TaskFormProps) {
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const taskId = searchParams.get("id");
-
+export function TaskForm({
+  customerId,
+  editingTaskId,
+  onCloseEdit,
+  onTaskCreated,
+  onTaskUpdated,
+}: TaskFormProps) {
   const [selectedTask, setSelectedTask] = useState<TaskEditItem | null>(null);
   const [isLoadingTask, setIsLoadingTask] = useState(false);
   const isEditing = !!selectedTask;
@@ -84,11 +86,22 @@ export function TaskForm({ customerId }: TaskFormProps) {
   });
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevEditingTaskIdRef = useRef(editingTaskId);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
-    if (!taskId) {
+    if (prevEditingTaskIdRef.current && !editingTaskId) {
+      setIsFormOpen(false);
+      reset();
+      setMedias([]);
+    }
+
+    prevEditingTaskIdRef.current = editingTaskId;
+  }, [editingTaskId, reset]);
+
+  useEffect(() => {
+    if (!editingTaskId) {
       setSelectedTask(null);
       return;
     }
@@ -100,19 +113,19 @@ export function TaskForm({ customerId }: TaskFormProps) {
       setIsLoadingTask(true);
 
       try {
-        const { data } = await api.get<TaskEditItem>(`tasks/${taskId}`);
+        const { data } = await api.get<TaskEditItem>(`tasks/${editingTaskId}`);
         setSelectedTask(data);
       } catch (error) {
         console.error(error);
         toast.error("Não foi possível carregar a tarefa");
-        router.replace(pathname);
+        onCloseEdit();
       } finally {
         setIsLoadingTask(false);
       }
     };
 
     fetchTask();
-  }, [taskId, pathname, router]);
+  }, [editingTaskId, onCloseEdit]);
 
   useEffect(() => {
     setMedias(
@@ -128,7 +141,7 @@ export function TaskForm({ customerId }: TaskFormProps) {
   }, [selectedTask?.medias]);
 
   const cancelEditTask = () => {
-    router.replace(pathname);
+    onCloseEdit();
     reset();
     setSelectedTask(null);
     setIsFormOpen(false);
@@ -156,7 +169,6 @@ export function TaskForm({ customerId }: TaskFormProps) {
         }),
       );
 
-      let response: TaskType;
       if (isEditing && selectedTask) {
         const deletedMedias = selectedTask.medias.filter(
           ({ id }) => !medias.map(({ id }) => id).includes(id),
@@ -182,14 +194,12 @@ export function TaskForm({ customerId }: TaskFormProps) {
           ),
         );
 
-        const { data } = await api.put<TaskType>(`tasks/${selectedTask.id}`, {
+        await api.put(`tasks/${selectedTask.id}`, {
           ...formData,
           medias: urls,
         });
-        response = data;
       } else {
-        const { data } = await api.post("tasks", { ...formData, medias: urls });
-        response = data;
+        await api.post("tasks", { ...formData, medias: urls });
       }
 
       await Promise.all(
@@ -209,8 +219,20 @@ export function TaskForm({ customerId }: TaskFormProps) {
           ? "Tarefa criada com sucesso!"
           : "Tarefa editada com sucesso!",
       );
-      cancelEditTask();
-      window.location.reload();
+
+      if (isEditing && selectedTask) {
+        onTaskUpdated(selectedTask.id, {
+          title: formData.title,
+          description: formData.description || null,
+          due: parseISO(formData.due),
+          ratio: formData.ratio || null,
+          responsible: formData.responsible,
+        });
+        cancelEditTask();
+      } else {
+        await onTaskCreated();
+        closeForm();
+      }
     } catch (error) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data);
@@ -282,13 +304,15 @@ export function TaskForm({ customerId }: TaskFormProps) {
         </button>
       ) : null}
 
-      {isFormOpen ? (
+      {isFormOpen || editingTaskId ? (
         <form
           className="flex flex-col gap-8 w-full p-5 bg-white rounded-xl drop-shadow-custom"
           onSubmit={handleSubmit(handleCreateTask)}
         >
           <h2 className="font-bold text-lg">
-            {isEditing ? "Edição de tarefa" : "Cadastro de tarefa"}
+            {editingTaskId || isEditing
+              ? "Edição de tarefa"
+              : "Cadastro de tarefa"}
           </h2>
 
           <fieldset
