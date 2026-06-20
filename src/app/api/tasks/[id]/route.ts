@@ -1,12 +1,43 @@
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
-import { uploadFile } from "@/utils/uploadFile";
+import { taskEditInclude } from "@/services/tasks";
 import { createTaskSchema } from "@/validators/task";
-import { Prisma, TaskResponsible } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { parseISO } from "date-fns";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError, z } from "zod";
+
+export async function GET(_request: NextRequest, { params }: any) {
+  const session = await getServerSession(nextAuthOptions);
+  if (!session) {
+    return new NextResponse("Não autorizado", { status: 401 });
+  }
+
+  try {
+    const { id } = await z.object({ id: z.string().min(1) }).parseAsync(params);
+
+    const task = await prismaClient.tasks.findUnique({
+      where: { id },
+      include: taskEditInclude,
+    });
+
+    if (!task) {
+      return new NextResponse("Não foi possível encontrar a tarefa", {
+        status: 404,
+      });
+    }
+
+    return NextResponse.json(task);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return new NextResponse("Validation Error", { status: 400 });
+    }
+
+    console.error(error);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
+}
 
 export async function PUT(request: NextRequest, { params }: any) {
   const session = await getServerSession(nextAuthOptions);

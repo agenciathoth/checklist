@@ -1,68 +1,12 @@
-import Link from "next/link";
 import { TitlePage } from "@/components/TitlePage";
 import { TopNav } from "@/components/TopNav";
 import { nextAuthOptions } from "@/config/auth";
 import { prismaClient } from "@/lib/prisma";
-import { Prisma, UserRole } from "@prisma/client";
+import { getCustomerTasksPaginated } from "@/services/tasks";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { CustomerPresentation } from "./CustomerPresentation";
-import { BottomNav } from "./BottomNav";
-import { TaskForm } from "./TaskForm";
-import { TasksList } from "./TasksLists";
-
-const getCustomerWithTasks = async (slug: string, isLogged?: boolean) => {
-  const customer = await prismaClient.customers.findFirst({
-    where: { slug },
-  });
-
-  if (!customer) {
-    return null;
-  }
-
-  const tasks = await prismaClient.tasks.findMany({
-    where: {
-      ...(!isLogged ? { archivedAt: null } : {}),
-      customer: { id: customer.id },
-    },
-    include: {
-      customer: true,
-      medias: {
-        orderBy: {
-          order: "asc",
-        },
-      },
-      updatedBy: true,
-      _count: {
-        select: {
-          comments: true,
-        },
-      },
-    },
-    orderBy: {
-      due: "asc",
-    },
-  });
-
-  return {
-    ...customer,
-    tasks: [...tasks].sort((a, b) => {
-      if (a.archivedAt) {
-        return 1;
-      }
-
-      if (b.archivedAt) {
-        return -1;
-      }
-
-      return 1;
-    }),
-  };
-};
-
-export type CustomerWithTasks = Prisma.PromiseReturnType<
-  typeof getCustomerWithTasks
->;
+import { CustomerClient } from "./CustomerClient";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +15,9 @@ export default async function Customer({ params }: any) {
 
   const session = await getServerSession(nextAuthOptions);
 
-  const customer = await getCustomerWithTasks(slug, !!session);
+  const customer = await prismaClient.customers.findFirst({
+    where: { slug },
+  });
 
   if (!customer) {
     if (session) {
@@ -85,6 +31,12 @@ export default async function Customer({ params }: any) {
     );
   }
 
+  const { tasks, pagination } = await getCustomerTasksPaginated({
+    customerId: customer.id,
+    isLogged: !!session,
+    page: 1,
+  });
+
   return (
     <>
       <TopNav />
@@ -92,18 +44,14 @@ export default async function Customer({ params }: any) {
       <TitlePage>Planner | {customer.name}</TitlePage>
 
       <CustomerPresentation presentation={customer.presentation || ""} />
-      {session ? (
-        <TaskForm customerId={customer.id} tasks={customer.tasks} />
-      ) : null}
 
-      <Link
-        href={`/clientes/${slug}/calendario`}
-        className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-transparent text-secondary border border-secondary font-medium rounded-full hover:opacity-90 transition-opacity"
-      >
-        Ver calendário
-      </Link>
-
-      {!!customer.tasks.length && <TasksList tasks={customer.tasks} />}
+      <CustomerClient
+        customerId={customer.id}
+        customerSlug={slug}
+        initialTasks={tasks}
+        initialHasMore={pagination.hasMore}
+        showTaskForm={!!session}
+      />
 
       <div className="h-16" />
     </>
