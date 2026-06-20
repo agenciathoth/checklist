@@ -16,10 +16,10 @@ model Users {
   updatedAt  DateTime?   @updatedAt @map("updated_at")
   email      String      @unique
   archivedAt DateTime?   @map("archived_at")
+  comments   Comments[]
   customers  Customers[]
   medias     Medias[]
   tasks      Tasks[]
-  comments   Comments[]
 
   @@map("users")
 }
@@ -49,18 +49,18 @@ model Tasks {
   description String?
   due         DateTime
   responsible TaskResponsible
-  ratio       String?         
   completedAt DateTime?       @map("completed_at")
-  scheduledAt DateTime?       @map("scheduled_at")
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime?       @updatedAt @map("updated_at")
   archivedAt  DateTime?       @map("archived_at")
   customerId  String          @map("customer_id")
   userId      String          @map("user_id")
+  ratio       String?
+  scheduledAt DateTime?       @map("scheduled_at")
+  comments    Comments[]
   medias      Medias[]
   customer    Customers       @relation(fields: [customerId], references: [id], onDelete: Cascade)
   updatedBy   Users           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  comments    Comments[]
 
   @@map("tasks")
 }
@@ -84,16 +84,16 @@ model Comments {
   id        String     @id @default(cuid())
   author    String?
   text      String
-  isLiked   Boolean?
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime?  @updatedAt @map("updated_at")
   userId    String?    @map("user_id")
   taskId    String     @map("task_id")
-  task      Tasks      @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  createdBy Users?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   parentId  String?    @map("parent_id")
+  isLiked   Boolean?
   parent    Comments?  @relation("CommentToReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comments[] @relation("CommentToReplies")
+  task      Tasks      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdBy Users?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("comments")
 }
